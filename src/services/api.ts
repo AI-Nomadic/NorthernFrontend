@@ -156,9 +156,9 @@ export const inviteUserToTrip = async (tripId: string, invitedEmail: string): Pr
 /**
  * Remove a collaborator from a trip.
  */
-export const removeCollaborator = async (tripId: string, collaboratorEmail: string): Promise<boolean> => {
+export const removeCollaborator = async (tripId: string, collaboratorEmail: string, requesterEmail: string): Promise<boolean> => {
     try {
-        const response = await fetch(`${REAL_API_BASE}/trips/${tripId}/collaborators?email=${collaboratorEmail}`, {
+        const response = await fetch(`${REAL_API_BASE}/trips/${tripId}/remove?email=${collaboratorEmail}&requesterEmail=${requesterEmail}`, {
             method: 'DELETE'
         });
 
@@ -167,6 +167,24 @@ export const removeCollaborator = async (tripId: string, collaboratorEmail: stri
         return true;
     } catch (error) {
         console.error('Error removing collaborator:', error);
+        return false;
+    }
+};
+
+/**
+ * Revoke a trip invitation.
+ */
+export const revokeInvitation = async (tripId: string, inviteeEmail: string, requesterEmail: string): Promise<boolean> => {
+    try {
+        const response = await fetch(`${REAL_API_BASE}/trips/${tripId}/revoke?email=${inviteeEmail}&requesterEmail=${requesterEmail}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error(`Failed to revoke invitation: ${response.statusText}`);
+
+        return true;
+    } catch (error) {
+        console.error('Error revoking invitation:', error);
         return false;
     }
 };

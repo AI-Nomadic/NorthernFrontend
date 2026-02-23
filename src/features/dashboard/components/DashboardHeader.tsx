@@ -28,6 +28,7 @@ interface DashboardHeaderProps {
     onSave?: () => void;
     onInvite?: (email: string) => Promise<boolean>;
     onRemoveCollaborator?: (email: string) => Promise<boolean>;
+    onRevokeCollaborator?: (email: string) => Promise<boolean>;
     collaborators?: Collaborator[];
     ownerEmail?: string;
 }
@@ -40,6 +41,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     onSave,
     onInvite,
     onRemoveCollaborator,
+    onRevokeCollaborator,
     collaborators = [],
     ownerEmail
 }) => {
@@ -88,16 +90,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     };
 
     const handleRevoke = async (email: string) => {
+        if (!onRevokeCollaborator) return;
         console.log(`[UI Action] Revoking invitation for: ${email}`);
-        // Once API is ready, we will call onRevokeCollaborator(email)
-        console.log('Backend API for revocation is pending implementation.');
-
-        // For now, we can use handleRemove as a fallback if the backend supports it via the same DELETE endpoint
-        // or just let it console log as requested.
         setRemovingEmail(email);
-        if (onRemoveCollaborator) {
-            await onRemoveCollaborator(email);
-        }
+        await onRevokeCollaborator(email);
         setRemovingEmail(null);
         return true;
     };

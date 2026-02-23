@@ -24,7 +24,7 @@ import {
   DeleteConfirmationModal,
   TrashBin
 } from './components';
-import { deleteTrip, updateTrip, inviteUserToTrip, removeCollaborator } from '@services/api';
+import { deleteTrip, updateTrip, inviteUserToTrip, removeCollaborator, revokeInvitation } from '@services/api';
 import { selectUserEmail } from '@state/selectors';
 
 interface DashboardProps {
@@ -170,10 +170,19 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
   };
 
   const handleRemoveCollaborator = async (collabEmail: string) => {
-    if (!itinerary) return false;
-    const success = await removeCollaborator(itinerary.id, collabEmail);
+    if (!itinerary || !email) return false;
+    const success = await removeCollaborator(itinerary.id, collabEmail, email);
     if (success) {
       // Re-fetch trip data to update the UI
+      dispatch(fetchItinerary(itinerary.id));
+    }
+    return success;
+  };
+
+  const handleRevokeCollaborator = async (inviteeEmail: string) => {
+    if (!itinerary || !email) return false;
+    const success = await revokeInvitation(itinerary.id, inviteeEmail, email);
+    if (success) {
       dispatch(fetchItinerary(itinerary.id));
     }
     return success;
@@ -259,6 +268,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
             onSave={handleSave}
             onInvite={handleInviteUser}
             onRemoveCollaborator={handleRemoveCollaborator}
+            onRevokeCollaborator={handleRevokeCollaborator}
             collaborators={itinerary.collaborators}
             ownerEmail={itinerary.ownerEmail}
           />
