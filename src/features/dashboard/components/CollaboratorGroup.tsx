@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { UserMinus, Users, X } from 'lucide-react';
 import { Collaborator } from '../../../types/trip';
 import { useClickOutside } from '../../../hooks/useClickOutside';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../state/store';
 
 interface CollaboratorGroupProps {
     collaborators: Collaborator[];
@@ -21,7 +23,14 @@ export const CollaboratorGroup: React.FC<CollaboratorGroupProps> = ({
     const [activePopover, setActivePopover] = useState<string | 'overflow' | null>(null);
     const popoverRef = useRef<HTMLDivElement>(null);
 
+    const currentUserEmail = useSelector((state: RootState) => state.user.email);
+
     useClickOutside(popoverRef, () => setActivePopover(null));
+
+    // For non-owners, only show ACCEPTED members. Owners see everyone.
+    const visibleCollaborators = isOwner
+        ? collaborators
+        : collaborators.filter(c => c.status === 'ACCEPTED');
 
     // Colors for avatars
     const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
@@ -31,8 +40,8 @@ export const CollaboratorGroup: React.FC<CollaboratorGroupProps> = ({
     };
 
     const displayLimit = 3;
-    const displayedCollaborators = collaborators.slice(0, displayLimit);
-    const overflowCollaborators = collaborators.slice(displayLimit);
+    const displayedCollaborators = visibleCollaborators.slice(0, displayLimit);
+    const overflowCollaborators = visibleCollaborators.slice(displayLimit);
     const hasOverflow = overflowCollaborators.length > 0;
 
     const handleAction = async (collab: Collaborator) => {
@@ -77,7 +86,7 @@ export const CollaboratorGroup: React.FC<CollaboratorGroupProps> = ({
                                     {collab.email === ownerEmail ? 'Creator' : (collab.status === 'ACCEPTED' ? 'Editor' : 'Pending')}
                                 </span>
                             </div>
-                            {isOwner && collab.email !== ownerEmail && (
+                            {(isOwner && collab.email !== ownerEmail) || (collab.email === currentUserEmail) ? (
                                 <button
                                     onClick={() => handleAction(collab)}
                                     className="w-full flex items-center justify-center gap-2 px-2 py-1.5 text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm shadow-red-500/20"
@@ -90,11 +99,11 @@ export const CollaboratorGroup: React.FC<CollaboratorGroupProps> = ({
                                     ) : (
                                         <>
                                             <UserMinus className="w-3.5 h-3.5" />
-                                            Remove
+                                            {collab.email === currentUserEmail ? 'Leave Trip' : 'Remove'}
                                         </>
                                     )}
                                 </button>
-                            )}
+                            ) : null}
                         </div>
                     )}
                 </div>
@@ -119,7 +128,7 @@ export const CollaboratorGroup: React.FC<CollaboratorGroupProps> = ({
                                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">All Members</h4>
                             </div>
                             <div className="space-y-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                                {collaborators.map((collab) => (
+                                {visibleCollaborators.map((collab) => (
                                     <div key={collab.email} className="flex items-center justify-between group">
                                         <div className="flex flex-col min-w-0">
                                             <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{collab.email}</span>
@@ -127,7 +136,7 @@ export const CollaboratorGroup: React.FC<CollaboratorGroupProps> = ({
                                                 {collab.email === ownerEmail ? 'Creator' : (collab.status === 'ACCEPTED' ? 'Editor' : 'Pending')}
                                             </span>
                                         </div>
-                                        {isOwner && collab.email !== ownerEmail && (
+                                        {(isOwner && collab.email !== ownerEmail) || (collab.email === currentUserEmail) ? (
                                             <button
                                                 onClick={() => handleAction(collab)}
                                                 className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-md transition-all shadow-sm shadow-red-500/20"
@@ -140,11 +149,11 @@ export const CollaboratorGroup: React.FC<CollaboratorGroupProps> = ({
                                                 ) : (
                                                     <>
                                                         <UserMinus className="w-3 h-3" />
-                                                        Remove
+                                                        {collab.email === currentUserEmail ? 'Leave' : 'Remove'}
                                                     </>
                                                 )}
                                             </button>
-                                        )}
+                                        ) : null}
                                     </div>
                                 ))}
                             </div>
