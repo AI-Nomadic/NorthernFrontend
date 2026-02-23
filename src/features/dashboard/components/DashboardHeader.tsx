@@ -13,7 +13,9 @@ import {
     LayoutGrid,
     Trash2,
     X,
-    UserMinus
+    UserMinus,
+    Edit2,
+    Check
 } from 'lucide-react';
 import { CollaboratorGroup } from './CollaboratorGroup';
 import { Collaborator } from '../../../types/trip';
@@ -31,6 +33,7 @@ interface DashboardHeaderProps {
     onRevokeCollaborator?: (email: string) => Promise<boolean>;
     collaborators?: Collaborator[];
     ownerEmail?: string;
+    onRename?: (newTitle: string) => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -43,8 +46,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     onRemoveCollaborator,
     onRevokeCollaborator,
     collaborators = [],
-    ownerEmail
+    ownerEmail,
+    onRename
 }) => {
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [editedTitle, setEditedTitle] = useState(destination);
     const [showMoreMenu, setShowMoreMenu] = useState(false);
     const [showInviteDropdown, setShowInviteDropdown] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
@@ -98,6 +104,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         return true;
     };
 
+    const handleRenameSubmit = () => {
+        if (editedTitle.trim() && editedTitle !== destination && onRename) {
+            onRename(editedTitle.trim());
+        }
+        setIsEditingTitle(false);
+    };
+
     return (
         <div className="flex items-center justify-between px-6 py-4 bg-white/60 dark:bg-[#050505] backdrop-blur-md border-b border-white/20 dark:border-surface-a20 relative z-30 sticky top-0 shadow-sm dark:shadow-md">
             {/* Left Section: Context & Navigation */}
@@ -120,9 +133,32 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         <span className="dark:text-gray-200">{destination}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">
-                            {destination} Itinerary
-                        </h1>
+                        {isEditingTitle ? (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="text"
+                                    value={editedTitle}
+                                    onChange={(e) => setEditedTitle(e.target.value)}
+                                    onBlur={handleRenameSubmit}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleRenameSubmit()}
+                                    autoFocus
+                                    className="text-xl font-bold bg-white dark:bg-surface-a10 border border-purple-300 dark:border-purple-800 rounded px-2 py-0.5 outline-none focus:ring-2 focus:ring-purple-500/20 dark:text-white"
+                                />
+                                <button onClick={handleRenameSubmit} className="text-purple-600 hover:text-purple-700">
+                                    <Check className="h-5 w-5" />
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <h1
+                                    className="text-xl font-bold text-gray-800 dark:text-white tracking-tight cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2"
+                                    onClick={() => isOwner && setIsEditingTitle(true)}
+                                >
+                                    {destination} Itinerary
+                                    {isOwner && <Edit2 className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                                </h1>
+                            </div>
+                        )}
                         <span className="px-2 py-0.5 rounded-full bg-[#da09de1a] dark:bg-[#da09de1a] text-primary-a10 dark:text-primary-a30 text-[10px] font-bold uppercase tracking-wider border border-[#f193ee4d] dark:border-[#f193ee33]">
                             Planning
                         </span>

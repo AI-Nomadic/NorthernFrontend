@@ -24,8 +24,9 @@ import {
     persistItinerary,
 } from '@state/slices/dashboardSlice';
 import { DRAG_TYPES } from '../utils';
+import { CollabEventType, CollabPayloads } from './useCollab';
 
-export const useDragAndDrop = () => {
+export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, payload: CollabPayloads[T]) => void) => {
     const dispatch = useAppDispatch();
     const itinerary = useAppSelector(selectItinerary);
     const { activeId, activeDragType, activeDragItem } = useAppSelector(selectDragState);
@@ -130,7 +131,15 @@ export const useDragAndDrop = () => {
                         oldIndex,
                         newIndex: insertionIndex,
                     }));
-                    // Removed persistItinerary calls to prevent autosave
+
+                    if (broadcast) {
+                        broadcast('ACTIVITY_REORDERED', {
+                            dayId: sourceDayId as string,
+                            oldIndex,
+                            newIndex: insertionIndex as number
+                        });
+                    }
+                    dispatch(persistItinerary());
                 } else {
                     dispatch(dragCancel());
                 }
@@ -143,7 +152,16 @@ export const useDragAndDrop = () => {
                     activityId: active.id as string,
                     targetIndex: insertionIndex,
                 }));
-                // Removed persistItinerary calls to prevent autosave
+
+                if (broadcast) {
+                    broadcast('ACTIVITY_MOVED', {
+                        sourceDayId: sourceDayId as string,
+                        targetDayId: targetDayId as string,
+                        activityId: active.id as string,
+                        targetIndex: insertionIndex
+                    });
+                }
+                dispatch(persistItinerary());
             }
         }
 
@@ -155,7 +173,14 @@ export const useDragAndDrop = () => {
             if (oldIdx !== -1 && newIdx !== -1 && oldIdx !== newIdx) {
                 // Use swap instead of reorder to directly exchange positions
                 dispatch(swapDays({ index1: oldIdx, index2: newIdx }));
-                // Removed persistItinerary calls to prevent autosave
+
+                if (broadcast) {
+                    broadcast('DAYS_REORDERED', {
+                        oldIndex: oldIdx,
+                        newIndex: newIdx
+                    });
+                }
+                dispatch(persistItinerary());
             } else {
                 dispatch(dragCancel());
             }
@@ -204,7 +229,15 @@ export const useDragAndDrop = () => {
                         activity: newActivity,
                         insertionIndex,
                     }));
-                    // Removed persistItinerary calls to prevent autosave
+
+                    if (broadcast) {
+                        broadcast('ACTIVITY_ADDED', {
+                            dayId: targetDayId,
+                            activity: newActivity,
+                            insertionIndex,
+                        });
+                    }
+                    dispatch(persistItinerary());
                 }
             } else {
                 dispatch(dragCancel());
@@ -225,7 +258,14 @@ export const useDragAndDrop = () => {
                     dayId: targetDayId,
                     accommodation: activeDragItem,
                 }));
-                // Removed persistItinerary calls to prevent autosave
+
+                if (broadcast) {
+                    broadcast('HOTEL_UPDATED', {
+                        dayId: targetDayId,
+                        newHotel: activeDragItem
+                    });
+                }
+                dispatch(persistItinerary());
             } else {
                 dispatch(dragCancel());
             }

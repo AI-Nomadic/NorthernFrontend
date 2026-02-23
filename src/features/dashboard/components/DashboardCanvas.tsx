@@ -20,6 +20,9 @@ interface DashboardCanvasProps {
     onManualAccommodation: (dayId: string) => void;
 
     onAddActivity: (dayId: string) => void;
+    onUpdateActivity: (dayId: string, activityId: string, updates: Partial<Activity>) => void;
+    onRemoveActivity: (dayId: string, activityId: string) => void;
+    onAddDay: () => void;
     onDeleteDay: (dayId: string) => void;
     activeDragType: string | null;
 
@@ -44,6 +47,9 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
     onAutoSuggestAccommodation,
     onManualAccommodation,
     onAddActivity,
+    onUpdateActivity,
+    onRemoveActivity,
+    onAddDay,
     onDeleteDay,
     activeDragType,
     selectedDayId,
@@ -83,6 +89,8 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
                                 onAutoSuggestAccommodation={onAutoSuggestAccommodation}
                                 onManualAccommodation={onManualAccommodation}
                                 onAddActivity={onAddActivity}
+                                onUpdateActivity={onUpdateActivity}
+                                onRemoveActivity={onRemoveActivity}
                                 onDeleteDay={onDeleteDay}
                                 activeDragType={activeDragType}
                                 isSelected={selectedDayId === day.id}
@@ -94,7 +102,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
 
                         {/* -- Add New Day Button -- */}
                         <div className="w-[350px] shrink-0 h-[700px]">
-                            <AddDayButton />
+                            <AddDayButton onAddDay={onAddDay} />
                         </div>
                     </div>
                 </SortableContext>

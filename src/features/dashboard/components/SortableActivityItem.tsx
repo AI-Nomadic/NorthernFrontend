@@ -5,18 +5,18 @@ import { Clock, DollarSign, GripHorizontal } from 'lucide-react';
 import { Activity } from '@types';
 import { DRAG_TYPES } from '../utils';
 import { useAppDispatch } from '@state';
-import { updateActivity, persistItinerary, removeActivity } from '@state/slices/dashboardSlice';
-import { Check, X } from 'lucide-react';
+import { persistItinerary } from '@state/slices/dashboardSlice';
 
 interface SortableActivityItemProps {
     activity: Activity;
     dayId: string;
     onClick: () => void;
+    onUpdate?: (dayId: string, activityId: string, updates: Partial<Activity>) => void;
+    onRemove?: (dayId: string, activityId: string) => void;
 }
 
-export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ activity, dayId, onClick }) => {
+export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ activity, dayId, onClick, onUpdate, onRemove }) => {
     // -- Sortable Logic --
-    // Hooks into dnd-kit's sorting system to allow reordering within the list.
     const {
         attributes,
         listeners,
@@ -31,21 +31,18 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
 
     const handleSaveDraft = () => {
         if (!draftTitle.trim()) {
-            // Logic to remove empty draft? For now just return.
-            if (activity.title === '') {
-                dispatch(removeActivity({ dayId, activityId: activity.id }));
+            if (activity.title === '' && onRemove) {
+                onRemove(dayId, activity.id);
             }
             return;
         }
 
-        dispatch(updateActivity({
-            dayId,
-            activityId: activity.id,
-            updates: {
+        if (onUpdate) {
+            onUpdate(dayId, activity.id, {
                 title: draftTitle,
                 isDraft: false
-            }
-        }));
+            });
+        }
     };
 
     const style = {
@@ -60,7 +57,7 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
             <div
                 ref={setNodeRef}
                 style={style}
-                className="bg-white p-3 rounded-xl border-2 border-dashed border-blue-300 shadow-sm mb-2"
+                className="bg-white dark:bg-surface-a10 p-3 rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-500 shadow-sm mb-2"
             >
                 <div className="flex items-center gap-2">
                     <input
@@ -69,7 +66,7 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
                         value={draftTitle}
                         onChange={(e) => setDraftTitle(e.target.value)}
                         placeholder="Enter activity name..."
-                        className="flex-1 bg-transparent border-none outline-none text-sm font-semibold text-slate-800 placeholder:text-slate-400"
+                        className="flex-1 bg-transparent border-none outline-none text-sm font-semibold text-slate-800 dark:text-white placeholder:text-slate-400"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                                 handleSaveDraft();

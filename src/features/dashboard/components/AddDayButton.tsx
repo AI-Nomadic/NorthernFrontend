@@ -2,13 +2,17 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { useAppDispatch } from '@state';
-import { addDay, persistItinerary } from '@state/slices/dashboardSlice';
+import { DayPlan } from '@types';
 
-export const AddDayButton: React.FC = () => {
+interface AddDayButtonProps {
+    onAddDay: () => void;
+}
+
+export const AddDayButton: React.FC<AddDayButtonProps> = ({ onAddDay }) => {
     const dispatch = useAppDispatch();
 
     const handleClick = () => {
-        dispatch(addDay());
+        onAddDay();
     };
 
     return (

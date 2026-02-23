@@ -8,7 +8,23 @@ import { ChatBot } from '@features/chat';
 import { getAccommodationSuggestion } from '@services';
 import { useDragAndDrop, useZoomPan, useDiscovery } from './hooks';
 import { useAppSelector, useAppDispatch, selectItinerary, selectTripState, selectSidebarOpen, selectSelectedActivity, selectSelectedAccommodation } from '@state';
-import { setSidebarOpen, selectActivity, selectAccommodation, removeAccommodation, removeActivity, addActivity, setAccommodation as setAccommodationAction, persistItinerary, deleteDay, selectDay, updateDay, fetchItinerary } from '@state/slices/dashboardSlice';
+import {
+  setSidebarOpen,
+  selectActivity,
+  selectAccommodation,
+  removeAccommodation,
+  removeActivity,
+  addActivity,
+  updateActivity,
+  setAccommodation as setAccommodationAction,
+  persistItinerary,
+  deleteDay,
+  selectDay,
+  updateDay,
+  fetchItinerary,
+  addDay
+} from '../../state/slices/dashboardSlice';
+import { useCollab } from './hooks/useCollab';
 import {
   DiscoverySidebar,
   DashboardCanvas,
@@ -56,6 +72,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
     return null;
   }
 
+  // Collaboration Hook
+  const { broadcast } = useCollab({
+    tripId: itinerary?.id || '',
+    userEmail: email || '',
+    enabled: !!itinerary && !!email
+  });
+
   // Custom Hooks
   const {
     sensors,
@@ -66,7 +89,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
     handleDragOver,
     handleDragEnd,
     handleDragCancel,
-  } = useDragAndDrop();
+  } = useDragAndDrop(broadcast);
 
 
   const {
@@ -101,25 +124,39 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
   // Handlers
   const handleRemoveAccommodation = (dayId: string) => {
     dispatch(removeAccommodation({ dayId }));
+    broadcast('HOTEL_REMOVED', { dayId });
     dispatch(selectAccommodation(null)); // Close modal if open
+    dispatch(persistItinerary());
   };
 
   const handleRemoveActivity = (dayId: string, activityId: string) => {
     dispatch(removeActivity({ dayId, activityId }));
+    broadcast('ACTIVITY_REMOVED', { dayId, activityId });
     dispatch(selectActivity(null));
+    dispatch(persistItinerary());
+  };
+
+  const handleUpdateActivity = (dayId: string, activityId: string, updates: Partial<Activity>) => {
+    dispatch(updateActivity({ dayId, activityId, updates }));
+    broadcast('ACTIVITY_UPDATED', { dayId, activityId, updates });
+    dispatch(persistItinerary());
   };
 
   const handleSaveManualAccommodation = (accommodation: Accommodation) => {
     if (manualAccommodationDayId) {
       dispatch(setAccommodationAction({ dayId: manualAccommodationDayId, accommodation }));
+      broadcast('HOTEL_UPDATED', { dayId: manualAccommodationDayId, newHotel: accommodation });
       setManualAccommodationDayId(null);
+      dispatch(persistItinerary());
     }
   };
 
   const handleSaveManualActivity = (activity: Activity) => {
     if (manualActivityDayId) {
       dispatch(addActivity({ dayId: manualActivityDayId, activity }));
+      broadcast('ACTIVITY_ADDED', { dayId: manualActivityDayId, activity });
       setManualActivityDayId(null);
+      dispatch(persistItinerary());
     }
   };
 
@@ -140,6 +177,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
       const location = day.activities[0]?.location || tripState.destination;
       const accom = await getAccommodationSuggestion(location, tripState.budget);
       dispatch(setAccommodationAction({ dayId, accommodation: accom }));
+      broadcast('HOTEL_UPDATED', { dayId, newHotel: accom });
+      dispatch(persistItinerary());
     } catch (err) {
       console.error('Failed to get accommodation', err);
     }
@@ -271,6 +310,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
             onRevokeCollaborator={handleRevokeCollaborator}
             collaborators={itinerary.collaborators}
             ownerEmail={itinerary.ownerEmail}
+            onRename={(newTitle) => {
+              dispatch({ type: 'dashboard/renameTrip', payload: newTitle });
+              broadcast('TRIP_RENAMED', { newTitle });
+              dispatch(persistItinerary());
+            }}
           />
 
           {/* Canvas Area - Flexible & Contained */}
@@ -283,6 +327,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
               itinerary={itinerary.itinerary}
               activeId={activeId}
               onSelectActivity={(activity) => dispatch(selectActivity(activity))}
+              onUpdateActivity={handleUpdateActivity}
+              onRemoveActivity={handleRemoveActivity}
               onSelectAccommodation={(accommodation) => dispatch(selectAccommodation(accommodation))}
               onAutoSuggestAccommodation={handleGetAccommodation}
               onPanStart={() => setIsPanning(true)}
@@ -304,19 +350,40 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
                   status: 'planned'
                 };
                 dispatch(addActivity({ dayId, activity: newActivity }));
-                dispatch(persistItinerary());
+                broadcast('ACTIVITY_ADDED', { dayId, activity: newActivity });
               }}
               onDeleteDay={(dayId) => {
                 dispatch(deleteDay({ dayId }));
+                broadcast('DAY_REMOVED', { dayId });
                 dispatch(persistItinerary());
               }}
               // Smart Restore Props
               selectedDayId={selectedDayId}
               onSelectDay={(dayId) => dispatch(selectDay(dayId))}
               trashBinOpen={trashBinOpen}
+              onAddDay={() => {
+                const newDayNum = (itinerary.itinerary?.length || 0) + 1;
+                const newDay = {
+                  id: self.crypto.randomUUID(),
+                  tripId: itinerary.id,
+                  dayNumber: newDayNum,
+                  theme: 'New Day',
+                  activities: []
+                };
+                dispatch(addDay(newDay));
+                broadcast('DAY_ADDED', { day: newDay });
+                dispatch(persistItinerary());
+              }}
               onUpdateDay={(dayId, updates) => {
                 dispatch(updateDay({ dayId, updates }));
+                broadcast('DAY_UPDATED', { dayId, updates });
                 dispatch(persistItinerary());
+                // If title changed, broadcast TRIP_RENAMED (if it was a trip-wide title change)
+                if (updates.theme && itinerary.itinerary.find(d => d.id === dayId)?.dayNumber === 1) {
+                  // Simplified: if Day 1 theme changes, maybe it's the title? 
+                  // But the spec says TRIP_RENAMED is for "Naz's NYC Adventure".
+                  // I'll skip broadcasting TRIP_RENAMED from here for now unless I find a better trigger.
+                }
               }}
             />
 

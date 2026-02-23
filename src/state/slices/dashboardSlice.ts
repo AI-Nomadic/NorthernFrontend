@@ -43,19 +43,14 @@ export const persistItinerary = createAsyncThunk(
             return null;
         }
 
-        // 1. Filter out days with no activities and no accommodation
-        const filteredDays = currentItinerary.itinerary.filter(day =>
-            day.activities.length > 0 || !!day.accommodation
-        );
-
-        // 2. Renumber remaining days sequentially
+        // 1. Prepare itinerary for persistence (renumber sequentially)
         const cleanedItinerary = {
             ...currentItinerary,
-            itinerary: filteredDays.map((day, index) => ({
+            itinerary: currentItinerary.itinerary.map((day, index) => ({
                 ...day,
                 dayNumber: index + 1
             })),
-            total_days: filteredDays.length
+            total_days: currentItinerary.itinerary.length
         };
 
         console.log('Persisting cleaned itinerary to backend:', cleanedItinerary);
@@ -320,8 +315,15 @@ const dashboardSlice = createSlice({
         },
 
         // -- Editable Itinerary Actions --
-        addDay: (state) => {
+        addDay: (state, action: PayloadAction<DayPlan | undefined>) => {
             if (!state.itinerary) return;
+
+            if (action.payload) {
+                state.itinerary.itinerary.push(action.payload);
+                state.itinerary.total_days = state.itinerary.itinerary.length;
+                return;
+            }
+
             const newDayNum = state.itinerary.itinerary.length + 1;
             const newDay: DayPlan = {
                 id: self.crypto.randomUUID(),
@@ -332,6 +334,14 @@ const dashboardSlice = createSlice({
             };
             state.itinerary.itinerary.push(newDay);
             state.itinerary.total_days = newDayNum;
+        },
+
+        renameTrip: (state, action: PayloadAction<string>) => {
+            if (!state.itinerary) return;
+            state.itinerary.trip_title = action.payload;
+            if (state.tripState) {
+                state.tripState.destination = action.payload; // Keep in sync if destination is used as title
+            }
         },
 
         deleteDay: (state, action: PayloadAction<{ dayId: string }>) => {
@@ -585,7 +595,8 @@ export const {
     restoreFromTrash,
     emptyTrash,
     selectDay,
-    setTrashBinOpen
+    setTrashBinOpen,
+    renameTrip
 } = dashboardSlice.actions;
 
 export default dashboardSlice.reducer;

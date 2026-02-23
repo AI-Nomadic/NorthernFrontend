@@ -13,6 +13,8 @@ interface SortableDayCardProps {
     onAutoSuggestAccommodation: (dayId: string) => void;
     onManualAccommodation?: (dayId: string) => void;
     onAddActivity?: (dayId: string) => void;
+    onUpdateActivity?: (dayId: string, activityId: string, updates: Partial<Activity>) => void;
+    onRemoveActivity?: (dayId: string, activityId: string) => void;
     onDeleteDay?: (dayId: string) => void;
     activeDragType: string | null;
 
@@ -61,6 +63,8 @@ export const SortableDayCard: React.FC<SortableDayCardProps> = (props) => {
             <DayCard
                 {...props}
                 onAddActivity={props.onAddActivity}
+                onUpdateActivity={props.onUpdateActivity}
+                onRemoveActivity={props.onRemoveActivity}
                 onDeleteDay={props.onDeleteDay}
                 dragHandleProps={{ attributes, listeners }}
                 isSelected={props.isSelected}
