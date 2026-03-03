@@ -66,6 +66,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     );
     const isOwner = !isCollaborator;
 
+    // Backend now always returns ownerEmail via the @Transient field.
+    // Fallback to currentUserEmail (when isOwner) covers any cached/stale state.
+    const effectiveOwnerEmail = ownerEmail ?? (isOwner ? (currentUserEmail ?? undefined) : undefined);
+
     const optionsRef = useRef<HTMLDivElement>(null);
     const inviteRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -173,7 +177,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <div className="flex items-center gap-2 pr-4 border-r border-gray-200/50 dark:border-surface-a20 hidden md:flex">
                     <CollaboratorGroup
                         collaborators={collaborators}
-                        ownerEmail={ownerEmail}
+                        ownerEmail={effectiveOwnerEmail}
                         isOwner={isOwner}
                         onRemove={handleRemove}
                         onRevoke={handleRevoke}
@@ -280,22 +284,28 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
                         {showMoreMenu && (
                             <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-surface-a0 rounded-xl shadow-xl border border-slate-100 dark:border-surface-a10 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
-                                <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors">
-                                    <Globe className="h-4 w-4" /> Publish
-                                </button>
+                                {isOwner && (
+                                    <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors">
+                                        <Globe className="h-4 w-4" /> Publish
+                                    </button>
+                                )}
                                 <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors">
                                     <Layers className="h-4 w-4" /> Add to Calendar
                                 </button>
                                 <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors">
                                     <Mail className="h-4 w-4" /> Share via Email
                                 </button>
-                                <div className="my-1 border-t border-gray-100/50 dark:border-surface-a10"></div>
-                                <button
-                                    onClick={onDelete}
-                                    className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors"
-                                >
-                                    <Trash2 className="h-4 w-4" /> Delete Trip
-                                </button>
+                                {isOwner && (
+                                    <>
+                                        <div className="my-1 border-t border-gray-100/50 dark:border-surface-a10"></div>
+                                        <button
+                                            onClick={onDelete}
+                                            className="w-full text-left px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors"
+                                        >
+                                            <Trash2 className="h-4 w-4" /> Delete Trip
+                                        </button>
+                                    </>
+                                )}
                                 <div className="my-1 border-t border-gray-100/50 dark:border-surface-a10"></div>
                                 <button
                                     onClick={() => navigate('/gallery')}
