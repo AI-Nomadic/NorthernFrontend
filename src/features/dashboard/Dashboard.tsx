@@ -67,10 +67,8 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
 
-  // Early return if no data
-  if (!itinerary || !tripState) {
-    return null;
-  }
+  // Early return — caller (DashboardRoute in App.tsx) guarantees itinerary is loaded
+  if (!itinerary || !tripState) return null;
 
   // Collaboration Hook
   const { broadcast } = useCollab({
@@ -188,7 +186,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
     if (!itinerary || !email) return;
 
     setIsDeleting(true);
-    const success = await deleteTrip(itinerary.id, email);
+    const success = await deleteTrip(itinerary.id);
     setIsDeleting(false);
 
     if (success) {
@@ -210,7 +208,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
 
   const handleRemoveCollaborator = async (collabEmail: string) => {
     if (!itinerary || !email) return false;
-    const success = await removeCollaborator(itinerary.id, collabEmail, email);
+    const success = await removeCollaborator(itinerary.id, collabEmail);
     if (success) {
       // Re-fetch trip data to update the UI
       dispatch(fetchItinerary(itinerary.id));
@@ -220,7 +218,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
 
   const handleRevokeCollaborator = async (inviteeEmail: string) => {
     if (!itinerary || !email) return false;
-    const success = await revokeInvitation(itinerary.id, inviteeEmail, email);
+    const success = await revokeInvitation(itinerary.id, inviteeEmail);
     if (success) {
       dispatch(fetchItinerary(itinerary.id));
     }

@@ -518,20 +518,20 @@ const dashboardSlice = createSlice({
                 state.loading = false;
                 state.itinerary = action.payload;
 
-                // Derive TripState from the fetched Trip to ensure Dashboard renders
-                if (action.payload.itinerary.length > 0) {
-                    const firstDay = action.payload.itinerary[0];
-                    const lastDay = action.payload.itinerary[action.payload.itinerary.length - 1];
+                // Persist last-opened trip ID so Dashboard can reload it on refresh
+                localStorage.setItem('northern_last_trip_id', action.payload.id);
 
-                    state.tripState = {
-                        destination: action.payload.trip_title.replace('Mock ', '').replace(' Adventure', '').replace(' Escape', '').replace(' Cultural', ''), // Simple cleanup
-                        startDate: firstDay.date || new Date().toISOString().split('T')[0],
-                        endDate: lastDay.date || new Date().toISOString().split('T')[0],
-                        vibe: TripVibe.RELAX, // Default or derive if added to DB
-                        budget: 1000, // Default or derive
-                        travelers: 2 // Default
-                    };
-                }
+                // Derive TripState from the fetched Trip to ensure Dashboard renders
+                const firstDay = action.payload.itinerary[0];
+                const lastDay = action.payload.itinerary[action.payload.itinerary.length - 1];
+                state.tripState = {
+                    destination: action.payload.trip_title,
+                    startDate: firstDay?.date || new Date().toISOString().split('T')[0],
+                    endDate: lastDay?.date || new Date().toISOString().split('T')[0],
+                    vibe: TripVibe.RELAX,
+                    budget: 1000,
+                    travelers: 2
+                };
             })
             .addCase(fetchItinerary.rejected, (state, action) => {
                 state.loading = false;

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { RootState } from '../state/store';
 import { useAppDispatch } from '../state';
 import { setAuth } from '../state/slices/userSlice';
 import { register, login, googleLogin } from '../services/authService';
@@ -10,6 +12,11 @@ declare const google: any;
 type Tab = 'login' | 'register';
 
 const LoginPage: React.FC = () => {
+    const isAuthenticated = useSelector((state: RootState) => state.user.isAuthenticated);
+
+    // Already logged in → send straight to gallery
+    if (isAuthenticated) return <Navigate to="/gallery" replace />;
+
     const [tab, setTab] = useState<Tab>('login');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');

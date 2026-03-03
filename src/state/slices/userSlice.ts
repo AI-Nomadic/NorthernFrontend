@@ -15,15 +15,28 @@ interface AuthPayload {
     name: string;
 }
 
-// Rehydrate from localStorage on app boot
+// Rehydrate from localStorage on app boot.
+// Decode the JWT payload (middle segment, base64) to recover email + name
+// without needing an extra library — the payload is plain JSON.
 const savedToken = localStorage.getItem(TOKEN_KEY);
+
+function decodeJwtPayload(token: string): { email?: string; name?: string } {
+    try {
+        return JSON.parse(atob(token.split('.')[1]));
+    } catch {
+        return {};
+    }
+}
+
+const savedPayload = savedToken ? decodeJwtPayload(savedToken) : {};
 
 const initialState: UserState = {
     token: savedToken,
-    email: null,
-    name: null,
+    email: savedPayload.email ?? null,
+    name: savedPayload.name ?? null,
     isAuthenticated: !!savedToken,
 };
+
 
 const userSlice = createSlice({
     name: 'user',
