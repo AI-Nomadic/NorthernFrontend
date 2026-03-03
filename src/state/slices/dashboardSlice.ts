@@ -8,42 +8,35 @@ import { RootState } from '../store';
 // Uses the centralized API service to fetch data
 export const fetchItinerary = createAsyncThunk(
     'dashboard/fetchItinerary',
-    async (tripId: string = 'current', { getState }) => {
-        const state = getState() as RootState;
-        const email = state.user.email;
-        console.log(`Fetching itinerary for ${tripId} (User: ${email}) from backend...`);
-        const trip = await getTrip(tripId, email);
+    async (tripId: string = 'current') => {
+        console.log(`Fetching itinerary ${tripId} from backend...`);
+        const trip = await getTrip(tripId);
         if (!trip) throw new Error('Trip not found');
-        console.log('Itinerary received:', trip);
         return trip;
     }
 );
 
-// Fetch all saved trips for the gallery
+
 export const fetchSavedTrips = createAsyncThunk(
     'dashboard/fetchSavedTrips',
-    async (_, { getState }) => {
-        const state = getState() as RootState;
-        const email = state.user.email;
-        const trips = await getAllTrips(email);
+    async () => {
+        const trips = await getAllTrips();
         return trips;
     }
 );
 
-// Persist itinerary to backend - filters empty days and renumbers sequentially
+
 export const persistItinerary = createAsyncThunk(
     'dashboard/persistItinerary',
     async (_, { getState }) => {
         const state = getState() as RootState;
         const currentItinerary = state.dashboard.itinerary;
-        const email = state.user.email;
 
-        if (!currentItinerary || !email) {
-            console.error('Missing itinerary or email for persistence');
+        if (!currentItinerary) {
+            console.error('Missing itinerary for persistence');
             return null;
         }
 
-        // 1. Prepare itinerary for persistence (renumber sequentially)
         const cleanedItinerary = {
             ...currentItinerary,
             itinerary: currentItinerary.itinerary.map((day, index) => ({
@@ -53,17 +46,12 @@ export const persistItinerary = createAsyncThunk(
             total_days: currentItinerary.itinerary.length
         };
 
-        console.log('Persisting cleaned itinerary to backend:', cleanedItinerary);
-        const updatedTrip = await updateTrip(cleanedItinerary, email);
-
-        if (!updatedTrip) {
-            throw new Error('Failed to update trip on backend');
-        }
-
-        console.log('Successfully persisted itinerary:', updatedTrip);
+        const updatedTrip = await updateTrip(cleanedItinerary);
+        if (!updatedTrip) throw new Error('Failed to update trip on backend');
         return updatedTrip;
     }
 );
+
 
 interface TrashItem {
     id: string; // unique trash id

@@ -26,40 +26,30 @@ const GalleryPage: React.FC = () => {
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
     useEffect(() => {
-        if (!email) {
-            navigate('/login');
-        } else {
-            dispatch(fetchSavedTrips());
-        }
-    }, [email, navigate, dispatch]);
+        dispatch(fetchSavedTrips());
+    }, [dispatch]);
+
 
     useEffect(() => {
-        if (email) {
-            const fetchInvitations = async () => {
-                setInvitationsLoading(true);
-                const data = await getTripInvitations(email);
-                setInvitations(data);
-                setInvitationsLoading(false);
-            };
-            fetchInvitations();
-        }
-    }, [email]);
+        const fetchInvitations = async () => {
+            setInvitationsLoading(true);
+            const data = await getTripInvitations();
+            setInvitations(data);
+            setInvitationsLoading(false);
+        };
+        fetchInvitations();
+    }, []);
+
 
     const handleResponse = async (tripId: string, action: 'ACCEPT' | 'DECLINE') => {
-        if (!email) return;
-
-        const success = await respondToInvitation(tripId, email, action);
+        const success = await respondToInvitation(tripId, action);
         if (success) {
-            // Refresh invitations
-            const data = await getTripInvitations(email);
+            const data = await getTripInvitations();
             setInvitations(data);
-
-            // If accepted, also refresh saved trips to show the new collaboration trip
-            if (action === 'ACCEPT') {
-                dispatch(fetchSavedTrips());
-            }
+            if (action === 'ACCEPT') dispatch(fetchSavedTrips());
         }
     };
+
 
     const handleTripClick = async (tripId: string) => {
         // Dispatch load action
@@ -93,6 +83,7 @@ const GalleryPage: React.FC = () => {
     }, [savedTrips, sortBy, email]);
 
     if (!email) return null;
+
 
     return (
         <div className="flex h-screen w-full bg-[#FCFCFC] dark:bg-surface-a0 overflow-hidden font-sans text-slate-900 dark:text-slate-200">
