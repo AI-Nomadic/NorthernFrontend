@@ -16,3 +16,5 @@ export { DashboardHeader } from './DashboardHeader';
 export { CollaboratorGroup } from './CollaboratorGroup';
 export { TrashBin } from './TrashBin';
 export { DeleteConfirmationModal } from './DeleteConfirmationModal';
+export { TripChat } from './TripChat';
+

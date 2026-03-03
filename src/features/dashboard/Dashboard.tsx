@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, PanelLeftOpen } from 'lucide-react';
 import { Activity, Accommodation } from '@types';
-import { ChatBot } from '@features/chat';
 import { getAccommodationSuggestion } from '@services';
 import { useDragAndDrop, useZoomPan, useDiscovery } from './hooks';
 import { useAppSelector, useAppDispatch, selectItinerary, selectTripState, selectSidebarOpen, selectSelectedActivity, selectSelectedAccommodation } from '@state';
@@ -38,7 +37,8 @@ import {
   ActivityFormModal,
   DashboardHeader,
   DeleteConfirmationModal,
-  TrashBin
+  TrashBin,
+  TripChat
 } from './components';
 import { deleteTrip, updateTrip, inviteUserToTrip, removeCollaborator, revokeInvitation } from '@services/api';
 import { selectUserEmail } from '@state/selectors';
@@ -62,6 +62,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
   const selectedDayId = useAppSelector(state => state.dashboard.selectedDayId);
   const trashBinOpen = useAppSelector(state => state.dashboard.trashBinOpen);
   const email = useAppSelector(selectUserEmail);
+  const userName = useAppSelector(state => state.user.name) || email?.split('@')[0] || 'User';
   const navigate = useNavigate();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
@@ -408,8 +409,12 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
           <BudgetAuditor totalCost={itinerary.itinerary.reduce((total, day) => { const activitiesCost = day.activities.reduce((sum, act) => sum + (act.cost_estimate || 0), 0); const hotelCost = day.accommodation?.pricePerNight || 0; return total + activitiesCost + hotelCost; }, 0)} budget={tripState.budget} />
         </div>
 
-        {/* ChatBot - Fixed Position */}
-        <ChatBot />
+        {/* Trip Group Chat - Fixed bottom-right */}
+        <TripChat
+          tripId={itinerary.id}
+          userEmail={email || ''}
+          userName={userName}
+        />
 
         {/* Trash Bin - Fixed Position */}
         <TrashBin />
