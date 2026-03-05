@@ -33,7 +33,9 @@ interface DashboardHeaderProps {
     onRevokeCollaborator?: (email: string) => Promise<boolean>;
     collaborators?: Collaborator[];
     ownerEmail?: string;
+    isPublished?: boolean;
     onRename?: (newTitle: string) => void;
+    onTogglePublish?: () => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -47,7 +49,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     onRevokeCollaborator,
     collaborators = [],
     ownerEmail,
-    onRename
+    isPublished,
+    onRename,
+    onTogglePublish
 }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(destination);
@@ -166,6 +170,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         <span className="px-2 py-0.5 rounded-full bg-[#da09de1a] dark:bg-[#da09de1a] text-primary-a10 dark:text-primary-a30 text-[10px] font-bold uppercase tracking-wider border border-[#f193ee4d] dark:border-[#f193ee33]">
                             Planning
                         </span>
+                        {isPublished && (
+                            <span className="px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-[10px] font-bold uppercase tracking-wider border border-green-200 dark:border-green-800">
+                                Published
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
@@ -285,8 +294,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         {showMoreMenu && (
                             <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-surface-a0 rounded-xl shadow-xl border border-slate-100 dark:border-surface-a10 py-1 z-50 animate-in fade-in zoom-in-95 duration-200">
                                 {isOwner && (
-                                    <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors">
-                                        <Globe className="h-4 w-4" /> Publish
+                                    <button
+                                        onClick={() => {
+                                            if (onTogglePublish) onTogglePublish();
+                                            setShowMoreMenu(false);
+                                        }}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors"
+                                    >
+                                        <Globe className="h-4 w-4" /> {isPublished ? 'Unpublish' : 'Publish'}
                                     </button>
                                 )}
                                 <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors">

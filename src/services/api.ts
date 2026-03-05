@@ -198,3 +198,54 @@ export const respondToInvitation = async (
         return false;
     }
 };
+
+/**
+ * Toggle Publish status for a trip.
+ */
+export const togglePublishTrip = async (tripId: string): Promise<Trip | null> => {
+    try {
+        const response = await fetch(`${REAL_API_BASE}/trips/${tripId}/publish`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error(`Failed to toggle publish status: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error toggling publish:', error);
+        return null;
+    }
+};
+
+/**
+ * Fetch all public trips.
+ */
+export const getPublicTrips = async (): Promise<Trip[]> => {
+    try {
+        const response = await fetch(`${REAL_API_BASE}/trips/public`, {
+            // Include headers if logged in, otherwise just Content-Type
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error(`Failed to fetch public trips: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching public trips:', error);
+        return [];
+    }
+};
+
+/**
+ * Fork a public trip.
+ */
+export const forkTrip = async (tripId: string): Promise<Trip | null> => {
+    try {
+        const response = await fetch(`${REAL_API_BASE}/trips/${tripId}/fork`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (!response.ok) throw new Error(`Failed to fork trip: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error forking trip:', error);
+        return null;
+    }
+};

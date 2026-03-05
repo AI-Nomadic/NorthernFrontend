@@ -48,6 +48,8 @@ export interface Trip {
             syncHash: string;
         }
     };
+    visibility?: 'PRIVATE' | 'PUBLIC';
+    sourceId?: string;
 }
 
 // API Request/Response Types

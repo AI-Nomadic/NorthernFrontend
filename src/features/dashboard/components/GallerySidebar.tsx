@@ -1,5 +1,6 @@
 import React from 'react';
-import { Sparkles, PanelLeftClose, Filter, SortAsc, Heart, BarChart2 } from 'lucide-react';
+import { Sparkles, PanelLeftClose, Filter, SortAsc, Heart, BarChart2, Globe } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { cn } from '@utils';
 import { SidebarFooter } from './SidebarFooter';
 
@@ -35,6 +36,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
     totalTrips
 }) => {
     const categories = ['All', 'Luxury', 'Adventure', 'Family', 'Relax', 'Budget'];
+    const navigate = useNavigate();
 
     return (
         <div className={cn(
@@ -68,6 +70,17 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                         <p className="text-lg font-bold text-slate-900 dark:text-white">{totalTrips} Trips</p>
                     </div>
                 </div>
+            </div>
+
+            {/* Explore Button */}
+            <div className="px-4 mt-2">
+                <button
+                    onClick={() => navigate('/explore')}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5"
+                >
+                    <Globe className="w-5 h-5" />
+                    Explore Public Trips
+                </button>
             </div>
 
             {/* Controls */}

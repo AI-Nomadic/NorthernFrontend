@@ -4,6 +4,7 @@ import { LandingPage } from '@features/landing';
 import { Dashboard } from '@features/dashboard';
 import LoginPage from './pages/LoginPage';
 import GalleryPage from './pages/GalleryPage';
+import ExplorePage from './pages/ExplorePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { TripState } from '@types';
 import { fetchItinerary, setTripState, resetDashboard } from './state/slices/dashboardSlice';
@@ -79,6 +80,7 @@ const App: React.FC = () => {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardRoute onReset={reset} /></ProtectedRoute>} />
       <Route path="/gallery" element={<ProtectedRoute><GalleryPage /></ProtectedRoute>} />
+      <Route path="/explore" element={<ExplorePage />} />
     </Routes>
   );
 };

@@ -6,7 +6,7 @@ import { useAppDispatch } from '../state';
 import { fetchItinerary, fetchSavedTrips } from '../state/slices/dashboardSlice';
 import { GallerySidebar } from '../features/dashboard/components/GallerySidebar';
 import { GalleryHeader } from '../features/dashboard/components/GalleryHeader';
-import { MapPin, Calendar, DollarSign, ArrowRight, Heart, Check, X } from 'lucide-react';
+import { MapPin, Calendar, DollarSign, ArrowRight, Heart, Check, X, Globe } from 'lucide-react';
 import { cn } from '@utils';
 import { motion } from 'framer-motion';
 import { getTripInvitations, respondToInvitation } from '../services/api';
@@ -58,7 +58,7 @@ const GalleryPage: React.FC = () => {
     };
 
     // -- Filtering & Sorting --
-    const { personalTrips, collaborationTrips } = useMemo(() => {
+    const { personalTrips, collaborationTrips, publishedTrips } = useMemo(() => {
         let result = [...savedTrips];
 
         // Sort
@@ -71,15 +71,18 @@ const GalleryPage: React.FC = () => {
             return 0; // Recent
         });
 
-        // Split into Personal and Collaboration
+        // Split into Personal, Published, and Collaboration
         const pTrips = result.filter(trip =>
-            !trip.collaborators?.some(c => c.email === email && c.status === 'ACCEPTED')
+            !trip.collaborators?.some(c => c.email === email && c.status === 'ACCEPTED') && trip.visibility !== 'PUBLIC'
+        );
+        const pubTrips = result.filter(trip =>
+            !trip.collaborators?.some(c => c.email === email && c.status === 'ACCEPTED') && trip.visibility === 'PUBLIC'
         );
         const cTrips = result.filter(trip =>
             trip.collaborators?.some(c => c.email === email && c.status === 'ACCEPTED')
         );
 
-        return { personalTrips: pTrips, collaborationTrips: cTrips };
+        return { personalTrips: pTrips, collaborationTrips: cTrips, publishedTrips: pubTrips };
     }, [savedTrips, sortBy, email]);
 
     if (!email) return null;
@@ -323,6 +326,73 @@ const GalleryPage: React.FC = () => {
                                 </div>
                             ))}
                         </div>
+
+                        {/* Published Trips Section */}
+                        {publishedTrips.length > 0 && (
+                            <section className="mb-12">
+                                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+                                    <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30">
+                                        <Globe className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                                    </div>
+                                    Published Trips
+                                </h2>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {publishedTrips.map((trip) => (
+                                        <div
+                                            key={trip.id}
+                                            onClick={() => handleTripClick(trip.id)}
+                                            className="group relative bg-white dark:bg-surface-a0 rounded-2xl border border-emerald-200 dark:border-emerald-500/20 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1"
+                                        >
+                                            {/* Image / Cover */}
+                                            <div className="h-48 bg-emerald-50 dark:bg-surface-a20 relative overflow-hidden">
+                                                <img
+                                                    src={trip.image_url || "https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=800&auto=format&fit=crop"}
+                                                    alt={trip.trip_title}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                                <div className="absolute top-3 right-3">
+                                                    <div className="px-2 py-1 rounded-md bg-emerald-600/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                                                        <Globe className="w-3 h-3" /> Public
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Content */}
+                                            <div className="p-5 space-y-4">
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">
+                                                        {trip.trip_title}
+                                                    </h3>
+                                                    <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
+                                                        <MapPin className="w-3 h-3" /> {trip.location || 'Exploring the world'}
+                                                    </p>
+                                                </div>
+
+                                                {/* Meta Stats */}
+                                                <div className="flex items-center gap-4 text-xs font-medium text-slate-600 dark:text-slate-300">
+                                                    <div className="flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md text-emerald-700 dark:text-emerald-300">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {trip.total_days} Days
+                                                    </div>
+                                                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-surface-a10 px-2 py-1 rounded-md">
+                                                        <DollarSign className="w-3 h-3" />
+                                                        {trip.currency}
+                                                    </div>
+                                                </div>
+
+                                                <div className="pt-4 border-t border-slate-100 dark:border-surface-a10 flex items-center justify-between">
+                                                    <span className="text-xs text-slate-400">Available on Explore</span>
+                                                    <span className="flex items-center gap-1 text-sm font-bold text-emerald-600 dark:text-emerald-500 group-hover:translate-x-1 transition-transform">
+                                                        Open <ArrowRight className="w-3 h-3" />
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
                         {/* Collaboration Section */}
                         {collaborationTrips.length > 0 && (

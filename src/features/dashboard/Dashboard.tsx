@@ -21,7 +21,8 @@ import {
   selectDay,
   updateDay,
   fetchItinerary,
-  addDay
+  addDay,
+  toggleTripPublish
 } from '../../state/slices/dashboardSlice';
 import { useCollab } from './hooks/useCollab';
 import {
@@ -309,6 +310,11 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
             onRevokeCollaborator={handleRevokeCollaborator}
             collaborators={itinerary.collaborators}
             ownerEmail={itinerary.ownerEmail}
+            isPublished={itinerary.visibility === 'PUBLIC'}
+            onTogglePublish={() => {
+              dispatch({ type: 'dashboard/togglePublish/pending' }); // Optional tracking
+              dispatch(toggleTripPublish(itinerary.id));
+            }}
             onRename={(newTitle) => {
               dispatch({ type: 'dashboard/renameTrip', payload: newTitle });
               broadcast('TRIP_RENAMED', { newTitle });

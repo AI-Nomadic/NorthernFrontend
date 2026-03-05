@@ -3,11 +3,14 @@ import dashboardReducer from './slices/dashboardSlice';
 import discoveryReducer from './slices/discoverySlice';
 import userReducer from './slices/userSlice';
 
+import publicTripsReducer from './slices/publicTripsSlice';
+
 export const store = configureStore({
     reducer: {
         dashboard: dashboardReducer,
         discovery: discoveryReducer,
         user: userReducer,
+        publicTrips: publicTripsReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

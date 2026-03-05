@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { Trip, DayPlan, Activity, Accommodation, TripState, TripVibe } from '@types';
 import { recalculateDayTimeline } from '@features/dashboard/utils';
-import { getTrip, getAllTrips, updateTrip } from '@services/api';
+import { getTrip, getAllTrips, updateTrip, togglePublishTrip } from '@services/api';
 import { RootState } from '../store';
 
 // -- Async Thunks --
@@ -25,6 +25,14 @@ export const fetchSavedTrips = createAsyncThunk(
     }
 );
 
+export const toggleTripPublish = createAsyncThunk(
+    'dashboard/togglePublish',
+    async (tripId: string) => {
+        const updatedTrip = await togglePublishTrip(tripId);
+        if (!updatedTrip) throw new Error('Failed to toggle publish status');
+        return updatedTrip;
+    }
+);
 
 export const persistItinerary = createAsyncThunk(
     'dashboard/persistItinerary',
@@ -551,6 +559,12 @@ const dashboardSlice = createSlice({
             })
             // Persist Itinerary
             .addCase(persistItinerary.fulfilled, (state, action) => {
+                if (action.payload) {
+                    state.itinerary = action.payload;
+                }
+            })
+            // Toggle Publish
+            .addCase(toggleTripPublish.fulfilled, (state, action) => {
                 if (action.payload) {
                     state.itinerary = action.payload;
                 }
