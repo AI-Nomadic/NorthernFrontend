@@ -7,6 +7,7 @@ interface UserState {
     email: string | null;
     name: string | null;
     isAuthenticated: boolean;
+    theme: 'light' | 'dark';
 }
 
 interface AuthPayload {
@@ -19,6 +20,7 @@ interface AuthPayload {
 // Decode the JWT payload (middle segment, base64) to recover email + name
 // without needing an extra library — the payload is plain JSON.
 const savedToken = localStorage.getItem(TOKEN_KEY);
+const savedTheme = localStorage.getItem('northern_theme') as 'light' | 'dark' | null;
 
 function decodeJwtPayload(token: string): { email?: string; name?: string } {
     try {
@@ -35,6 +37,7 @@ const initialState: UserState = {
     email: savedPayload.email ?? null,
     name: savedPayload.name ?? null,
     isAuthenticated: !!savedToken,
+    theme: savedTheme || 'light',
 };
 
 
@@ -48,6 +51,10 @@ const userSlice = createSlice({
             state.name = action.payload.name;
             state.isAuthenticated = true;
             localStorage.setItem(TOKEN_KEY, action.payload.token);
+        },
+        toggleTheme: (state) => {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('northern_theme', state.theme);
         },
         // Legacy shim — kept so existing code calling setUser still compiles
         setUser: (state, action: PayloadAction<string>) => {
@@ -67,5 +74,5 @@ const userSlice = createSlice({
     },
 });
 
-export const { setAuth, setUser, logout, clearUser } = userSlice.actions;
+export const { setAuth, setUser, logout, clearUser, toggleTheme } = userSlice.actions;
 export default userSlice.reducer;

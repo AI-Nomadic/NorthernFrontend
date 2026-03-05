@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+.glassmorphism {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.dark .glassmorphism {
+    background: rgba(18, 18, 18, 0.8);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.text-gradient-chaos {
+    background: linear-gradient(135deg, var(--clr-primary-a10) 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.card-shadow {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+/* Base body styles for landing page if needed */
+.landing-body {
+    font-family: 'Inter', sans-serif;
+    background-color: #fcfcfc;
+    overflow-x: hidden;
+    --map-fill: #F1F5F9;
+    --map-stroke: #CBD5E1;
+}
+
+.dark .landing-body {
+    background-color: #121212;
+    color: #f1f5f9;
+    --map-fill: #1e1e1e;
+    --map-stroke: #333333;
+    transition: background-color 0.3s ease;
+}

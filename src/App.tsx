@@ -50,6 +50,15 @@ const App: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const theme = useAppSelector(state => state.user.theme);
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   const handleGenerate = async (trip: TripState) => {
     setLoading(true);

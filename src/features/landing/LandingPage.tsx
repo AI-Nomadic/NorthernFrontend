@@ -1,143 +1,176 @@
 import React, { useState } from 'react';
-import { MapPin, Calendar, Compass, Sparkles, TrendingUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import FeatureCollections from './components/FeatureCollections';
+import ProvinceDiscovery from './components/ProvinceDiscovery';
+import TravelForm from './components/TravelForm';
+import ItineraryDisplay from './components/ItineraryDisplay';
+import Footer from './components/Footer';
+import { ItineraryResponse, TravelFormData } from './types';
+import { generateItinerary } from './services/geminiService';
 import { TripVibe, TripState } from '@types';
+import './landing.css';
 
 interface LandingPageProps {
     onGenerate: (trip: TripState) => void;
     loading: boolean;
 }
 
-const LandingPage: React.FC<LandingPageProps> = ({ onGenerate, loading }) => {
-    // -- Trip Inputs --
-    // State for capturing user preferences to generate the itinerary.
-    const [destination, setDestination] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [vibe, setVibe] = useState<TripVibe>(TripVibe.ADVENTURE);
-    const [budget, setBudget] = useState(2000);
+const LandingPage: React.FC<LandingPageProps> = ({ onGenerate, loading: parentLoading }) => {
+    const [itinerary, setItinerary] = useState<ItineraryResponse | null>(null);
+    const [localLoading, setLocalLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Validation: Ensure required fields are present
-        if (!destination || !startDate || !endDate) return;
-        onGenerate({ destination, startDate, endDate, vibe, budget });
+    const isLoading = parentLoading || localLoading;
+
+    const handlePlanTrip = async (formData: TravelFormData) => {
+        setLocalLoading(true);
+        setError(null);
+        try {
+            // Option 1: Generate preview on landing page (as in northen-landing)
+            const result = await generateItinerary(formData);
+            setItinerary(result);
+
+            // Option 2: Also trigger the parent's generation if we want to sync with dashboard
+            // We need to map TravelFormData to TripState
+            const startDate = new Date().toISOString().split('T')[0];
+            const endDate = new Date(Date.now() + formData.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+            // Note: We don't call onGenerate immediately here so user can see the preview first.
+            // Or we could have a "Start Full Planning" button in ItineraryDisplay.
+
+            // Smooth scroll to results
+            setTimeout(() => {
+                document.getElementById('itinerary-results')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        } catch (err) {
+            setError('Something went wrong generating your Canadian adventure. Please try again.');
+        } finally {
+            setLocalLoading(false);
+        }
+    };
+
+    // Callback used when the user wants to go to the full dashboard, if applicable
+    const handleGenerateFull = (formData: TravelFormData) => {
+        const startDate = new Date().toISOString().split('T')[0];
+        const endDate = new Date(Date.now() + formData.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        let vibe = TripVibe.ADVENTURE;
+        if (formData.budget === 'Luxury') vibe = TripVibe.LUXURY;
+        if (formData.budget === 'Budget') vibe = TripVibe.BUDGET;
+
+        onGenerate({
+            destination: formData.destination,
+            startDate,
+            endDate,
+            vibe,
+            budget: formData.budget === 'Luxury' ? 5000 : (formData.budget === 'Budget' ? 1000 : 2500),
+            travelers: 2
+        });
     };
 
     return (
-        <div className="min-h-screen gradient-bg flex flex-col items-center justify-center p-6 text-white overflow-hidden relative">
-            {/* Decorative Orbs */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-full" />
+        <div className="min-h-screen landing-body bg-white dark:bg-slate-950 selection:bg-blue-100 selection:text-blue-900 transition-colors duration-300">
+            <Navbar />
 
-            <div className="z-10 text-center max-w-2xl mb-12">
-                <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/20 mb-6 backdrop-blur-sm animate-pulse">
-                    <Sparkles className="w-4 h-4 text-blue-300" />
-                    <span className="text-xs font-medium uppercase tracking-widest text-blue-100">AI Powered Architect</span>
-                </div>
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
-                    Your <span className="text-blue-400">Northern Path</span> Awaits.
-                </h1>
-                <p className="text-lg text-slate-300 leading-relaxed">
-                    The ultimate Canadian travel experience, architected by AI.
-                    From the peak of the Rockies to the tides of the Maritimes.
-                </p>
-            </div>
+            <main>
+                <Hero onCtaClick={() => document.getElementById('plan-section')?.scrollIntoView({ behavior: 'smooth' })} />
 
-            <form
-                onSubmit={handleSubmit}
-                className="z-10 w-full max-w-4xl bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl space-y-8"
-            >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Row 1: Destination and Dates */}
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <MapPin className="w-3 h-3" /> Destination
-                        </label>
-                        <input
-                            type="text"
-                            required
-                            placeholder="e.g. Banff, Vancouver"
-                            className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                            value={destination}
-                            onChange={(e) => setDestination(e.target.value)}
-                        />
-                    </div>
+                <FeatureCollections />
 
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <Calendar className="w-3 h-3" /> Dates
-                        </label>
-                        <div className="flex gap-2">
-                            <input
-                                type="date"
-                                required
-                                className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 [color-scheme:dark]"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                            />
-                            <input
-                                type="date"
-                                required
-                                className="w-full bg-white/10 border border-white/10 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 [color-scheme:dark]"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                            />
+                <ProvinceDiscovery />
+
+                <section id="plan-section" className="py-24 px-6 bg-white dark:bg-slate-900 transition-colors duration-300">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-16">
+                            <motion.h2
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4"
+                            >
+                                Craft Your Northern Path
+                            </motion.h2>
+                            <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ delay: 0.1 }}
+                                className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto"
+                            >
+                                Our AI Travel Architect designs logistics-first itineraries.
+                                Just tell us where you're heading in Canada.
+                            </motion.p>
+                        </div>
+
+                        <div className="max-w-2xl mx-auto">
+                            <TravelForm onSubmit={handlePlanTrip} isLoading={isLoading} />
                         </div>
                     </div>
+                </section>
 
-                    {/* Row 2: Vibe and Budget */}
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <Compass className="w-3 h-3" /> Vibe
-                        </label>
-                        <select
-                            className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                            value={vibe}
-                            onChange={(e) => setVibe(e.target.value as TripVibe)}
-                        >
-                            {Object.values(TripVibe).map((v) => (
-                                <option key={v} value={v} className="bg-slate-900">{v}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3" /> Budget (CAD)
-                        </label>
-                        <input
-                            type="number"
-                            placeholder="Total budget"
-                            className="w-full bg-white/10 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
-                            value={budget}
-                            onChange={(e) => setBudget(Number(e.target.value))}
-                        />
-                    </div>
-                </div>
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold text-lg transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-3 disabled:opacity-50"
-                >
-                    {loading ? (
-                        <>
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Building Your Journey...
-                        </>
-                    ) : (
-                        <>
-                            Generate Itinerary
-                            <Sparkles className="w-5 h-5" />
-                        </>
+                <AnimatePresence mode="wait">
+                    {isLoading && (
+                        <section className="py-12 px-6 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+                            <div className="max-w-7xl mx-auto">
+                                <motion.div
+                                    key="loading"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="flex flex-col items-center justify-center p-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800"
+                                >
+                                    <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                                    <p className="text-slate-600 dark:text-slate-400 font-medium">Drafting your custom Canadian path...</p>
+                                </motion.div>
+                            </div>
+                        </section>
                     )}
-                </button>
-            </form>
 
-            <div className="mt-12 text-slate-400 text-sm animate-bounce opacity-50">
-                Scroll down to explore featured Canadian paths
-            </div>
-        </div>
+                    {itinerary && !isLoading && (
+                        <section id="itinerary-results" className="py-24 px-6 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+                            <div className="max-w-7xl mx-auto">
+                                <ItineraryDisplay itinerary={itinerary} />
+
+                                <div className="mt-12 flex justify-center">
+                                    <button
+                                        onClick={() => {
+                                            // Extract data to move to dashboard
+                                            const lastDest = itinerary.trip_title.split(' to ')[1] || itinerary.trip_title;
+                                            onGenerate({
+                                                destination: lastDest,
+                                                startDate: new Date().toISOString().split('T')[0],
+                                                endDate: new Date(Date.now() + itinerary.total_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                                                vibe: TripVibe.ADVENTURE,
+                                                budget: 2000,
+                                                travelers: 2
+                                            });
+                                        }}
+                                        className="px-8 py-4 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-bold shadow-xl hover:bg-slate-800 dark:hover:bg-blue-500 transition-all flex items-center gap-2"
+                                    >
+                                        Save & Customize in Dashboard
+                                    </button>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
+                    {error && !isLoading && (
+                        <section className="py-12 px-6">
+                            <div className="max-w-3xl mx-auto">
+                                <div className="bg-red-50 text-red-600 p-8 rounded-3xl border border-red-100 text-center">
+                                    <p>{error}</p>
+                                </div>
+                            </div>
+                        </section>
+                    )}
+                </AnimatePresence>
+            </main>
+
+            <Footer />
+        </div >
     );
 };
 

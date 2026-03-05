@@ -6,12 +6,13 @@ import { useClickOutside } from '../../../hooks/useClickOutside';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../../state/store';
 import { useAppDispatch } from '../../../state';
-import { logout } from '../../../state/slices/userSlice';
+import { logout, toggleTheme as toggleThemeAction } from '../../../state/slices/userSlice';
 import { useNavigate } from 'react-router-dom';
 
 export const SidebarFooter: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const [isDark, setIsDark] = useState(false);
+    const theme = useSelector((state: RootState) => state.user.theme);
+    const isDark = theme === 'dark';
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const email = useSelector((state: RootState) => state.user.email);
@@ -21,12 +22,7 @@ export const SidebarFooter: React.FC = () => {
     useClickOutside(containerRef, () => setIsOpen(false));
 
     const toggleTheme = () => {
-        setIsDark(!isDark);
-        if (!isDark) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        dispatch(toggleThemeAction());
     };
 
     const handleLogout = () => {
