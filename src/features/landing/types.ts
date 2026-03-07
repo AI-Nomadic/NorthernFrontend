@@ -6,11 +6,12 @@ export interface Activity {
   location: string;
   description: string;
   cost_estimate: number;
-  category: 'Food' | 'Sightseeing' | 'Adventure' | 'Transport' | 'Lodging';
+  category: 'Food' | 'Sightseeing' | 'Adventure' | 'Transport' | 'Lodging' | 'Relaxation' | 'Nightlife';
+  imageGallery: string[];
 }
 
 export interface DayPlan {
-  day: number;
+  dayNumber: number;
   theme: string;
   activities: Activity[];
 }
@@ -21,9 +22,20 @@ export interface SidebarSuggestion {
 }
 
 export interface ItineraryResponse {
+  id?: string;
   trip_title: string;
+  featuredImage?: string;
   total_days: number;
   currency: string;
+  location?: {
+    province?: string;
+    region?: string;
+    slug?: string;
+  };
+  taxonomy?: {
+    theme?: string;
+    themeLabel?: string;
+  };
   itinerary: DayPlan[];
   sidebar_suggestions: SidebarSuggestion[];
 }

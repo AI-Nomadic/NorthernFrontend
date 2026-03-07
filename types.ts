@@ -42,7 +42,7 @@ export interface Accommodation {
 
 export interface Activity {
   id: string; // e.g., 'act_...'
-  type: 'activity' | 'food' | 'transport';
+  type?: 'activity' | 'food' | 'transport';
   title: string;
   location: string;
   description: string;
@@ -54,8 +54,10 @@ export interface Activity {
     end: string;
   };
   coordinates?: { lat: number; lng: number };
+  travelDistance?: number;
   travelTimeFromPrev?: number;
   status: 'planned' | 'completed' | 'skipped';
+  imageGallery: string[]; // URLs (Google Photos)
   metadata?: {
     isLocked?: boolean;
     source?: 'ai_generated' | 'user_added';
@@ -92,17 +94,42 @@ export interface Collaborator {
 export interface Trip {
   id: string; // e.g., 'trp_...'
   trip_title: string;
+  featuredImage?: string; // Parent thumbnail
   total_days: number;
   currency: string;
-  itinerary: DayPlan[];
-  sidebar_suggestions: Suggestion[];
-  collaborators?: Collaborator[]; // Optional collaborators field
-  externalSync?: {
-    googleCalendar?: {
-      lastSyncedAt: string;
-      syncHash: string;
-    }
+  visibility: 'PRIVATE' | 'PUBLIC';
+  sourceId?: string;
+  ownerEmail?: string;
+
+  location: {
+    province?: string;
+    region?: string;
+    slug?: string;
   };
+
+  taxonomy: {
+    theme?: string;
+    themeLabel?: string;
+    travelType?: string;
+    travelTypeLabel?: string;
+    season?: string[];
+  };
+
+  metrics: {
+    budgetRange?: string;
+    difficulty?: string;
+    activityLevel?: string;
+  };
+
+  summaryStats: {
+    totalActivities?: number;
+    avgCostPerDay?: number;
+  };
+
+  tags: string[];
+  itinerary: DayPlan[];
+  collaborators?: Collaborator[];
+  sidebar_suggestions?: Suggestion[];
 }
 
 export interface TripState {

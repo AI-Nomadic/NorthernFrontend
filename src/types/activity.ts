@@ -1,6 +1,6 @@
 export interface Activity {
     id: string; // e.g., 'act_...'
-    type: 'activity' | 'food' | 'transport';
+    type?: 'activity' | 'food' | 'transport';
     title: string;
     location: string;
     description: string;
@@ -11,10 +11,11 @@ export interface Activity {
         start: string;
         end: string;
     };
-    time?: string; // Display time (e.g., "10:00 AM") - kept for UI compatibility
     coordinates?: { lat: number; lng: number };
+    travelDistance?: number;
     travelTimeFromPrev?: number;
     status: 'planned' | 'completed' | 'skipped';
+    imageGallery: string[]; // Google Photos URLs
     metadata?: {
         isLocked?: boolean;
         source?: 'ai_generated' | 'user_added';

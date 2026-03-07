@@ -206,7 +206,7 @@ const GalleryPage: React.FC = () => {
                                             {/* Image / Cover */}
                                             <div className="h-48 bg-purple-50 dark:bg-surface-a20 relative overflow-hidden">
                                                 <img
-                                                    src={invite.image_url || "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9"}
+                                                    src={invite.featuredImage || invite.image_url || "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9"}
                                                     alt={invite.trip_title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />
@@ -224,7 +224,7 @@ const GalleryPage: React.FC = () => {
                                                         {invite.trip_title}
                                                     </h3>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
-                                                        <MapPin className="w-3 h-3" /> {invite.location || 'New York, NY'}
+                                                        <MapPin className="w-3 h-3" /> {invite.location?.province || invite.location?.toString() || 'New York, NY'}
                                                     </p>
                                                 </div>
 
@@ -279,7 +279,7 @@ const GalleryPage: React.FC = () => {
                                     {/* Image / Cover */}
                                     <div className="h-48 bg-slate-200 dark:bg-surface-a20 relative overflow-hidden">
                                         <img
-                                            src={trip.image_url || (trip.id.includes('montreal')
+                                            src={trip.featuredImage || trip.image_url || (trip.id.includes('montreal')
                                                 ? "https://images.unsplash.com/photo-1519178555425-500d4861cd75?q=80&w=800&auto=format&fit=crop"
                                                 : "https://images.unsplash.com/photo-1517935706615-2717063c2225?q=80&w=800&auto=format&fit=crop"
                                             )}
@@ -300,7 +300,7 @@ const GalleryPage: React.FC = () => {
                                                 {trip.trip_title}
                                             </h3>
                                             <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
-                                                <MapPin className="w-3 h-3" /> {trip.location || (trip.id.includes('montreal') ? 'Montreal, Canada' : 'Toronto, Canada')}
+                                                <MapPin className="w-3 h-3" /> {trip.location?.province || trip.location?.toString() || (trip.id.includes('montreal') ? 'Montreal, Canada' : 'Toronto, Canada')}
                                             </p>
                                         </div>
 
@@ -347,7 +347,7 @@ const GalleryPage: React.FC = () => {
                                             {/* Image / Cover */}
                                             <div className="h-48 bg-emerald-50 dark:bg-surface-a20 relative overflow-hidden">
                                                 <img
-                                                    src={trip.image_url || "https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=800&auto=format&fit=crop"}
+                                                    src={trip.featuredImage || trip.image_url || "https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=800&auto=format&fit=crop"}
                                                     alt={trip.trip_title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />
@@ -365,7 +365,7 @@ const GalleryPage: React.FC = () => {
                                                         {trip.trip_title}
                                                     </h3>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
-                                                        <MapPin className="w-3 h-3" /> {trip.location || 'Exploring the world'}
+                                                        <MapPin className="w-3 h-3" /> {trip.location?.province || trip.location?.toString() || 'Exploring the world'}
                                                     </p>
                                                 </div>
 
@@ -414,7 +414,7 @@ const GalleryPage: React.FC = () => {
                                             {/* Image / Cover */}
                                             <div className="h-48 bg-purple-50 dark:bg-surface-a20 relative overflow-hidden">
                                                 <img
-                                                    src={trip.image_url || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=800&auto=format&fit=crop"}
+                                                    src={trip.featuredImage || trip.image_url || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=800&auto=format&fit=crop"}
                                                     alt={trip.trip_title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />
@@ -432,7 +432,7 @@ const GalleryPage: React.FC = () => {
                                                         {trip.trip_title}
                                                     </h3>
                                                     <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-1">
-                                                        <MapPin className="w-3 h-3" /> {trip.location || 'Discovering...'}
+                                                        <MapPin className="w-3 h-3" /> {trip.location?.province || trip.location?.toString() || 'Discovering...'}
                                                     </p>
                                                 </div>
 

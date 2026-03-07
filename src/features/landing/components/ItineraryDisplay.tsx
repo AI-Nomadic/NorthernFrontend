@@ -44,11 +44,20 @@ const ItineraryDisplay: React.FC<ItineraryDisplayProps> = ({ itinerary }) => {
             transition={{ delay: idx * 0.1 }}
             className="relative"
           >
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-primary/20 dark:shadow-none">
-                {dayPlan.day}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-primary text-white flex items-center justify-center font-bold text-lg shadow-lg shadow-primary/20 dark:shadow-none">
+                  {dayPlan.dayNumber}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800 dark:text-white">{dayPlan.theme}</h3>
+                  {itinerary.location?.province && (
+                    <span className="text-xs font-bold text-primary uppercase tracking-wider">
+                      {itinerary.location.province}
+                    </span>
+                  )}
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white">{dayPlan.theme}</h3>
             </div>
 
             <div className="grid gap-4 ml-6 pl-10 border-l-2 border-slate-100 dark:border-slate-800 pb-2">

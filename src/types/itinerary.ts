@@ -8,7 +8,7 @@ export interface Stats {
 }
 
 export interface DayPlan {
-    id: string; // Stable ID for drag-and-drop
+    id: string; // e.g., 'day_...'
     tripId: string;
     dayNumber: number;
     date?: string; // ISO Date "YYYY-MM-DD"

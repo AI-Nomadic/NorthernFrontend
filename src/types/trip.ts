@@ -33,23 +33,44 @@ export interface Collaborator {
 export interface Trip {
     id: string; // e.g., 'trp_...'
     trip_title: string;
+    featuredImage?: string; // Parent thumbnail
     total_days: number;
     currency: string;
-    itinerary: DayPlan[];
-    sidebar_suggestions: Suggestion[];
-    location?: string; // Optinal location for UI
-    image_url?: string; // Optional image URL for UI
-    last_edited?: string; // Friendly date like "2d ago"
-    ownerEmail?: string; // Email of the trip creator
-    collaborators?: Collaborator[];
-    externalSync?: {
-        googleCalendar?: {
-            lastSyncedAt: string;
-            syncHash: string;
-        }
-    };
-    visibility?: 'PRIVATE' | 'PUBLIC';
+    visibility: 'PRIVATE' | 'PUBLIC';
     sourceId?: string;
+    ownerEmail?: string;
+
+    location: {
+        province?: string;
+        region?: string;
+        slug?: string;
+    };
+
+    taxonomy: {
+        theme?: string;
+        themeLabel?: string;
+        travelType?: string;
+        travelTypeLabel?: string;
+        season?: string[];
+    };
+
+    metrics: {
+        budgetRange?: string;
+        difficulty?: string;
+        activityLevel?: string;
+    };
+
+    summaryStats: {
+        totalActivities?: number;
+        avgCostPerDay?: number;
+    };
+
+    tags: string[];
+    itinerary: DayPlan[];
+    collaborators?: Collaborator[];
+    sidebar_suggestions?: Suggestion[];
+    image_url?: string; // Legacy support
+    last_edited?: string;
 }
 
 // API Request/Response Types

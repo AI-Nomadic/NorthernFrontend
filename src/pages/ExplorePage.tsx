@@ -67,6 +67,16 @@ export const ExplorePage: React.FC = () => {
                         {trips.map(trip => (
                             <div key={trip.id} className="group bg-white dark:bg-surface-a10 rounded-2xl border border-slate-200 dark:border-surface-a20 overflow-hidden hover:shadow-xl hover:border-purple-300 dark:hover:border-purple-700 transition-all duration-300 flex flex-col">
 
+                                {trip.featuredImage && (
+                                    <div className="h-40 overflow-hidden">
+                                        <img
+                                            src={trip.featuredImage}
+                                            alt={trip.trip_title}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                    </div>
+                                )}
+
                                 {/* Card Body */}
                                 <div className="p-6 flex-1 flex flex-col">
                                     <div className="flex items-start justify-between mb-4">
@@ -81,7 +91,9 @@ export const ExplorePage: React.FC = () => {
                                     <div className="space-y-3 mt-auto">
                                         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                                             <MapPin className="h-4 w-4 shrink-0" />
-                                            <span className="truncate">{trip.location || 'Multiple Locations'}</span>
+                                            <span className="truncate">
+                                                {trip.location?.province || trip.location?.toString() || 'Multiple Locations'}
+                                            </span>
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                                             <Activity className="h-4 w-4 shrink-0" />
@@ -89,6 +101,11 @@ export const ExplorePage: React.FC = () => {
                                                 {trip.itinerary?.reduce((acc, day) => acc + (day.activities?.length || 0), 0) || 0} activities
                                             </span>
                                         </div>
+                                        {trip.taxonomy?.themeLabel && (
+                                            <div className="flex items-center gap-2 text-xs font-bold text-purple-600 uppercase tracking-tighter">
+                                                {trip.taxonomy.themeLabel}
+                                            </div>
+                                        )}
                                         {trip.ownerEmail && (
                                             <div className="text-xs text-slate-400 mt-2">
                                                 By: <span className="font-medium text-slate-600 dark:text-slate-300">{trip.ownerEmail}</span>
