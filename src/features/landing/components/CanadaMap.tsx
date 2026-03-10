@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ComposableMap, Geographies, Geography } from 'react-simple-maps';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
@@ -13,6 +13,7 @@ interface ProvinceData {
 }
 
 const CanadaMap: React.FC = () => {
+  const navigate = useNavigate();
   const [hoveredProvince, setHoveredProvince] = useState<ProvinceData | null>(null);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
 
@@ -20,9 +21,9 @@ const CanadaMap: React.FC = () => {
     setTooltipPos({ x: event.clientX, y: event.clientY });
   };
 
-  const handleProvinceClick = (id: string) => {
-    // Navigate to search page (simulated)
-    window.location.href = `/explore?region=${id}`;
+  const handleProvinceClick = (provinceName: string) => {
+    // Navigate to explore page with province filter
+    navigate(`/explore?province=${encodeURIComponent(provinceName)}`);
   };
 
   return (
@@ -58,7 +59,7 @@ const CanadaMap: React.FC = () => {
                     onMouseLeave={() => {
                       setHoveredProvince(null);
                     }}
-                    onClick={() => handleProvinceClick(provinceId)}
+                    onClick={() => handleProvinceClick(provinceName)}
                     style={{
                       default: {
                         fill: "var(--map-fill, #F1F5F9)",

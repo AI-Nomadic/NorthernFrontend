@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, ArrowRight } from 'lucide-react';
 import CanadaMap from './CanadaMap';
@@ -81,10 +82,13 @@ const ProvinceDiscovery: React.FC = () => {
                   {province.description}
                 </p>
                 <div>
-                  <button className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-primary text-white rounded-2xl font-semibold hover:bg-primary dark:hover:opacity-90 transition-colors group">
+                  <Link 
+                    to={`/explore?province=${encodeURIComponent(province.name)}`}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 dark:bg-primary text-white rounded-2xl font-semibold hover:bg-primary dark:hover:opacity-90 transition-colors group"
+                  >
                     Explore Routes
                     <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </button>
+                  </Link>
                 </div>
               </div>
             </motion.div>

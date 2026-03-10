@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mountain, Sun, Palmtree, Building2, Ticket, ChevronRight } from 'lucide-react';
 
@@ -52,41 +52,45 @@ const FeatureCollections: React.FC = () => {
               Explore hand-picked categories designed to match your specific travel style and seasonal preferences.
             </p>
           </div>
-          <button className="flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all group">
+          <Link to="/explore" className="flex items-center gap-2 text-primary font-semibold hover:gap-3 transition-all group">
             View all categories <ChevronRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {collections.map((item, i) => (
-            <motion.div
+            <Link
               key={item.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -8 }}
-              className="group cursor-pointer"
+              to={`/explore?category=${encodeURIComponent(item.title)}`}
+              className="group cursor-pointer block"
             >
-              <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden mb-4 shadow-lg group-hover:shadow-xl transition-all">
-                <img
-                  src={item.image}
-                  alt={item.title}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <div className={`w-10 h-10 ${item.color} rounded-xl flex items-center justify-center text-white mb-3 shadow-lg`}>
-                    {item.icon}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -8 }}
+              >
+                <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden mb-4 shadow-lg group-hover:shadow-xl transition-all">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <div className={`w-10 h-10 ${item.color} rounded-xl flex items-center justify-center text-white mb-3 shadow-lg`}>
+                      {item.icon}
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-1">{item.title}</h3>
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-1">{item.title}</h3>
                 </div>
-              </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 px-2">
-                {item.description}
-              </p>
-            </motion.div>
+                <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 px-2">
+                  {item.description}
+                </p>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>
