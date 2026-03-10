@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, PanelLeftClose, Mountain, Sun, Palmtree, Building2, Ticket, Search, MapPin, Map } from 'lucide-react';
+import { Heart, X, Sparkles, PanelLeftClose, Mountain, Sun, Palmtree, Building2, Ticket, Search, MapPin, Map } from 'lucide-react';
 import { cn } from '../../../utils';
 
 interface Category {
@@ -46,7 +46,7 @@ const provinces = [
   { title: "Ontario", image: "https://images.unsplash.com/photo-1503970993930-adaba1879ba4?auto=format&fit=crop&q=80&w=800", icon: <MapPin className="w-3 h-3" /> },
   { title: "Prince Edward Island", image: "https://images.unsplash.com/photo-1533154683836-84ea7a0bc310?auto=format&fit=crop&q=80&w=800", icon: <MapPin className="w-3 h-3" /> },
   { title: "Quebec", image: "https://images.unsplash.com/photo-1510797215324-95aa89f43c33?auto=format&fit=crop&q=80&w=800", icon: <MapPin className="w-3 h-3" /> },
-  { title: "Saskatchewan", image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=800", icon: <MapPin className="w-3 h-3" /> },
+  { title: "Saskatchewan", image: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&q=80&w=400", icon: <MapPin className="w-3 h-3" /> },
   { title: "Northwest Territories", image: "https://images.unsplash.com/photo-1531366930499-41f66950574f?auto=format&fit=crop&q=80&w=800", icon: <MapPin className="w-3 h-3" /> },
   { title: "Nunavut", image: "https://images.unsplash.com/photo-1531366930499-41f66950574f?auto=format&fit=crop&q=80&w=800", icon: <MapPin className="w-3 h-3" /> },
   { title: "Yukon", image: "https://images.unsplash.com/photo-1531366930499-41f66950574f?auto=format&fit=crop&q=80&w=800", icon: <MapPin className="w-3 h-3" /> }
@@ -255,4 +255,3 @@ export const ExploreSidebar: React.FC<ExploreSidebarProps> = ({
     </div>
   );
 };
-
