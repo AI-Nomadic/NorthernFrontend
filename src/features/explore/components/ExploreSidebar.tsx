@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Heart, X, Sparkles, PanelLeftClose, Mountain, Sun, Palmtree, Building2, Ticket, Search, MapPin, Map } from 'lucide-react';
 import { cn } from '../../../utils';
 
@@ -92,12 +93,12 @@ export const ExploreSidebar: React.FC<ExploreSidebarProps> = ({
       {/* Header */}
       <div className="px-6 py-4 border-b border-white/20 dark:border-surface-a20 bg-slate-50/50 dark:bg-surface-a0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center h-8 gap-2 text-slate-900 dark:text-white">
+          <Link to="/" className="flex items-center h-8 gap-2 text-slate-900 dark:text-white hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center text-white shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
             <span className="font-bold tracking-tight whitespace-nowrap">Filter Quest</span>
-          </div>
+          </Link>
           <button onClick={onToggle} className="p-2 hover:bg-slate-100 dark:hover:bg-surface-a10 rounded-full text-slate-400 dark:text-slate-500 shrink-0">
             <PanelLeftClose className="w-4 h-4" />
           </button>

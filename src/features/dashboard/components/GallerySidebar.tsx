@@ -1,6 +1,6 @@
 import React from 'react';
 import { Sparkles, PanelLeftClose, Filter, SortAsc, Heart, BarChart2, Globe } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { cn } from '@utils';
 import { SidebarFooter } from './SidebarFooter';
 
@@ -47,12 +47,12 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
             {/* Header */}
             <div className="px-6 py-6 border-b border-slate-100 dark:border-surface-a10 bg-slate-50/50 dark:bg-surface-a0">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+                    <Link to="/" className="flex items-center gap-2 text-slate-900 dark:text-white hover:opacity-80 transition-opacity">
                         <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center text-white">
                             <Sparkles className="w-4 h-4" />
                         </div>
                         <span className="font-bold tracking-tight">My Trips</span>
-                    </div>
+                    </Link>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-surface-a10 rounded-full text-slate-400 dark:text-slate-500">
                         <PanelLeftClose className="w-4 h-4" />
                     </button>
