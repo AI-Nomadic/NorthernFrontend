@@ -78,9 +78,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGenerate, loading: parentLo
             <main>
                 <Hero onCtaClick={() => document.getElementById('plan-section')?.scrollIntoView({ behavior: 'smooth' })} />
 
-                <FeatureCollections />
+                <section id="collections-section">
+                    <FeatureCollections />
+                </section>
 
-                <ProvinceDiscovery />
+                <section id="discover-section">
+                    <ProvinceDiscovery />
+                </section>
 
                 <section id="plan-section" className="py-24 px-6 bg-white dark:bg-slate-900 transition-colors duration-300">
                     <div className="max-w-7xl mx-auto">
@@ -169,7 +173,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGenerate, loading: parentLo
                 </AnimatePresence>
             </main>
 
-            <Footer />
+            <section id="footer-section">
+                <Footer />
+            </section>
         </div >
     );
 };

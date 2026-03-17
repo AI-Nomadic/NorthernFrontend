@@ -181,10 +181,6 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
           <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
             <Heart className="w-3.5 h-3.5 text-primary" /> Interests & Vibes
           </label>
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-500/10 border border-blue-500/20">
-             <Sparkles className="w-3 h-3 text-blue-500" />
-             <span className="text-[10px] font-black text-blue-500 uppercase tracking-tighter">AI Recs</span>
-          </div>
         </div>
 
         <div className="space-y-4">
