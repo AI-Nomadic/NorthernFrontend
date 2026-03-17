@@ -1,8 +1,10 @@
 import React from 'react';
 import { Star, Clock, DollarSign, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 
 interface TripTileProps {
+  id: string;
   title: string;
   image: string;
   location: string;
@@ -13,6 +15,7 @@ interface TripTileProps {
 }
 
 export const TripTile: React.FC<TripTileProps> = ({
+  id,
   title,
   image,
   location,
@@ -21,6 +24,8 @@ export const TripTile: React.FC<TripTileProps> = ({
   rating,
   reviews
 }) => {
+  const navigate = useNavigate();
+
   return (
     <motion.div
       whileHover={{ y: -8 }}
@@ -71,7 +76,10 @@ export const TripTile: React.FC<TripTileProps> = ({
                 <span className="text-xl font-black">{price}</span>
             </div>
           </div>
-          <button className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-xl text-xs font-bold hover:bg-purple-600 dark:hover:bg-purple-500 dark:hover:text-white transition-all shadow-md">
+          <button 
+            onClick={() => navigate(`/explore/trip/${id}`)}
+            className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2 rounded-xl text-xs font-bold hover:bg-purple-600 dark:hover:bg-purple-500 dark:hover:text-white transition-all shadow-md"
+          >
             View Trip
           </button>
         </div>

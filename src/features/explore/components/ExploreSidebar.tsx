@@ -3,37 +3,43 @@ import { Link } from 'react-router-dom';
 import { Heart, X, Sparkles, PanelLeftClose, Mountain, Sun, Palmtree, Building2, Ticket, Search, MapPin, Map } from 'lucide-react';
 import { cn } from '../../../utils';
 
-interface Category {
+export interface Category {
   title: string;
   icon: React.ReactNode;
   image: string;
+  tags: string[];
 }
 
-const categories: Category[] = [
+export const categories: Category[] = [
   {
     title: "Adventure",
     image: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800",
-    icon: <Mountain className="w-4 h-4" />
+    icon: <Mountain className="w-4 h-4" />,
+    tags: ["mountains", "hiking", "adventure", "active", "wildlife"]
   },
   {
     title: "Summer Bliss",
     image: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=800",
-    icon: <Sun className="w-4 h-4" />
+    icon: <Sun className="w-4 h-4" />,
+    tags: ["summer", "warm", "relaxation", "sunny", "beach"]
   },
   {
     title: "Coastal Escape",
     image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=800",
-    icon: <Palmtree className="w-4 h-4" />
+    icon: <Palmtree className="w-4 h-4" />,
+    tags: ["ocean", "coastal", "beach", "island", "sea", "nature"]
   },
   {
     title: "Urban Pulse",
     image: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800",
-    icon: <Building2 className="w-4 h-4" />
+    icon: <Building2 className="w-4 h-4" />,
+    tags: ["urban", "nightlife", "local food", "culture", "city", "architecture"]
   },
   {
     title: "Themed Journeys",
     image: "https://images.unsplash.com/photo-1531366930499-41f66950574f?auto=format&fit=crop&q=80&w=800",
-    icon: <Ticket className="w-4 h-4" />
+    icon: <Ticket className="w-4 h-4" />,
+    tags: ["hidden gems", "history", "art", "festival", "luxury"]
   }
 ];
 

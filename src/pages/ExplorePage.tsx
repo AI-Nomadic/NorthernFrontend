@@ -8,82 +8,26 @@ import {
     Search,
     User
 } from 'lucide-react';
-import { useAppSelector } from '../state';
-import { ExploreSidebar } from '../features/explore/components/ExploreSidebar';
+import { useAppSelector, useAppDispatch } from '../state';
+import { fetchPublicTrips } from '../state/slices/publicTripsSlice';
+import { ExploreSidebar, categories } from '../features/explore/components/ExploreSidebar';
 import { TripTile } from '../features/explore/components/TripTile';
 import { cn } from '../utils';
 
-// Placeholder data for Trip Tiles
-const placeholderTrips = [
-  {
-    id: '1',
-    title: 'Rocky Mountain Adventure',
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800',
-    location: 'Banff, Alberta',
-    duration: '7 Days',
-    price: '$1,250',
-    rating: 4.8,
-    reviews: 124
-  },
-  {
-    id: '2',
-    title: 'Quebec City Winter Escape',
-    image: 'https://images.unsplash.com/photo-1510797215324-95aa89f43c33?auto=format&fit=crop&q=80&w=800',
-    location: 'Quebec City, QC',
-    duration: '4 Days',
-    price: '$850',
-    rating: 4.9,
-    reviews: 86
-  },
-  {
-    id: '3',
-    title: 'Vancouver Island Coastal Tour',
-    image: 'https://images.unsplash.com/photo-1559583985-c80d8ad9b29f?auto=format&fit=crop&q=80&w=800',
-    location: 'Tofino, BC',
-    duration: '5 Days',
-    price: '$1,100',
-    rating: 4.7,
-    reviews: 210
-  },
-  {
-    id: '4',
-    title: 'Toronto Urban Exploration',
-    image: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&q=80&w=800',
-    location: 'Toronto, Ontario',
-    duration: '3 Days',
-    price: '$600',
-    rating: 4.6,
-    reviews: 154
-  },
-  {
-    id: '5',
-    title: 'Maritime Heritage Trail',
-    image: 'https://images.unsplash.com/photo-1531366930499-41f66950574f?auto=format&fit=crop&q=80&w=800',
-    location: 'Halifax, NS',
-    duration: '6 Days',
-    price: '$980',
-    rating: 4.8,
-    reviews: 95
-  },
-  {
-    id: '6',
-    title: 'Niagara Falls & Wine Country',
-    image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&q=80&w=800',
-    location: 'Niagara Falls, ON',
-    duration: '2 Days',
-    price: '$450',
-    rating: 4.9,
-    reviews: 320
-  }
-];
-
 export const ExplorePage: React.FC = () => {
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
     const [searchParams, setSearchParams] = useSearchParams();
     
     // Derived state from URL params
     const appliedCategory = searchParams.get('category');
     const appliedProvince = searchParams.get('province');
+
+    const { trips: publicTrips, loading, error } = useAppSelector(state => state.publicTrips);
+
+    useEffect(() => {
+        dispatch(fetchPublicTrips());
+    }, [dispatch]);
 
     // Sidebar State
     const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -121,9 +65,24 @@ export const ExplorePage: React.FC = () => {
     };
 
     // Filtered Trips (client-side for now)
-    const filteredTrips = placeholderTrips.filter(trip => {
-        const matchesCategory = !appliedCategory || trip.title.toLowerCase().includes(appliedCategory.toLowerCase());
-        const matchesProvince = !appliedProvince || trip.location.toLowerCase().includes(appliedProvince.toLowerCase());
+    const filteredTrips = publicTrips.filter(trip => {
+        const selectedCategory = categories.find(c => c.title === appliedCategory);
+        let matchesCategory = true;
+        
+        const tripTags = trip.tags || [];
+
+        if (appliedCategory && selectedCategory) {
+            // Check if the trip has any tags that intersect with the category's mapped tags
+            matchesCategory = tripTags.some(tag => 
+                selectedCategory.tags.includes(tag.toLowerCase())
+            );
+        } else if (appliedCategory) {
+            // Fallback for categories without specific mapped tags
+            const title = trip.trip_title || '';
+            matchesCategory = title.toLowerCase().includes(appliedCategory.toLowerCase());
+        }
+
+        const matchesProvince = !appliedProvince || trip.location?.province === appliedProvince;
         return matchesCategory && matchesProvince;
     });
 
@@ -186,7 +145,7 @@ export const ExplorePage: React.FC = () => {
                         
                         <div className="flex items-center gap-3">
                             <button 
-                                onClick={() => navigate('/')}
+                                onClick={() => navigate('/gallery')}
                                 className="p-2 -ml-2 rounded-lg hover:bg-gray-100 dark:hover:bg-surface-a20 transition-colors text-gray-500 dark:text-gray-400"
                             >
                                 <ChevronLeft className="h-5 w-5" />
@@ -259,10 +218,25 @@ export const ExplorePage: React.FC = () => {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {filteredTrips.map((trip) => (
-                                <TripTile key={trip.id} {...trip} />
+                            {loading && (
+                                <div className="col-span-full py-24 text-center">
+                                    <p className="text-slate-500 font-medium">Loading amazing trips...</p>
+                                </div>
+                            )}
+                            {!loading && filteredTrips.map((trip) => (
+                                <TripTile 
+                                    key={trip.id} 
+                                    id={trip.id}
+                                    title={trip.trip_title || 'Untitled Trip'}
+                                    image={trip.featuredImage || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800'}
+                                    location={trip.location ? `${trip.location.province || ''}${trip.location.region ? `, ${trip.location.region}` : ''}` : 'Unknown Location'}
+                                    duration={`${trip.total_days || 0} Days`}
+                                    price={`${trip.currency || '$'} ${trip.summaryStats?.avgCostPerDay || 0}`}
+                                    rating={4.8} // Placeholder
+                                    reviews={124} // Placeholder
+                                />
                             ))}
-                            {filteredTrips.length === 0 && (
+                            {!loading && filteredTrips.length === 0 && (
                                 <div className="col-span-full py-24 text-center">
                                     <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">No results found</h3>
                                     <p className="text-slate-500 dark:text-slate-400">Try adjusting your filters to find more adventures.</p>
