@@ -13,8 +13,12 @@ export const TripDetailsPage: React.FC = () => {
     const dispatch = useAppDispatch();
     
     const { trips: publicTrips, loading, forkStatus, forkedTripId } = useAppSelector(state => state.publicTrips);
-    const { isAuthenticated } = useAppSelector(state => state.user);
+    const { isAuthenticated, email: currentUserEmail } = useAppSelector(state => state.user);
     const trip = publicTrips.find(t => t.id === tripId);
+
+    const isOwner = trip?.ownerEmail === currentUserEmail;
+    const isCollaborator = trip?.collaborators?.some(c => c.email === currentUserEmail);
+    const isContributor = isOwner || isCollaborator;
 
     useEffect(() => {
         if (publicTrips.length === 0 && !loading) {
@@ -114,18 +118,20 @@ export const TripDetailsPage: React.FC = () => {
                 </div>
                 
                 {/* Actions */}
-                <button 
-                    onClick={handleClone}
-                    disabled={forkStatus === 'loading'}
-                    className="shrink-0 px-8 py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 disabled:cursor-not-allowed rounded-xl font-bold text-sm tracking-wider uppercase transition-all text-white flex items-center gap-3 shadow-xl shadow-purple-900/20 active:scale-95"
-                >
-                    {forkStatus === 'loading' ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                        <Copy className="w-4 h-4" />
-                    )}
-                    {forkStatus === 'loading' ? 'Cloning Journey...' : 'Clone & Edit'}
-                </button>
+                {!isContributor && (
+                    <button 
+                        onClick={handleClone}
+                        disabled={forkStatus === 'loading'}
+                        className="shrink-0 px-8 py-4 bg-purple-600 hover:bg-purple-500 disabled:bg-purple-800 disabled:cursor-not-allowed rounded-xl font-bold text-sm tracking-wider uppercase transition-all text-white flex items-center gap-3 shadow-xl shadow-purple-900/20 active:scale-95"
+                    >
+                        {forkStatus === 'loading' ? (
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <Copy className="w-4 h-4" />
+                        )}
+                        {forkStatus === 'loading' ? 'Cloning Journey...' : 'Clone & Edit'}
+                    </button>
+                )}
             </header>
 
             {/* Timeline View */}
