@@ -1,7 +1,10 @@
-import { Trip, TripGenerationRequest, Suggestion } from '../types';
+import { Trip, TripGenerationRequest, Suggestion, TravelFormData, ItineraryResponse } from '../types';
+
 
 const MOCK_API_BASE = 'http://localhost:3001';
 const REAL_API_BASE = 'http://localhost:8090/api'; // ← All traffic through API Gateway
+const PLANNER_API_BASE = import.meta.env.VITE_PLANNER_API_URL || 'http://localhost:8888/api/planner';
+
 
 /**
  * Returns the Authorization header with the stored JWT.
@@ -249,3 +252,22 @@ export const forkTrip = async (tripId: string): Promise<Trip | null> => {
         return null;
     }
 };
+
+/**
+ * Call the AI-Planner Node.js service for the initial "Creative Phase".
+ */
+export const generateItinerary = async (data: TravelFormData): Promise<ItineraryResponse> => {
+    const response = await fetch(`${PLANNER_API_BASE}/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate skeleton itinerary');
+    }
+
+    return await response.json() as ItineraryResponse;
+};
+

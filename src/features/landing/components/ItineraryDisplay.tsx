@@ -3,7 +3,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 // Fixed: Added missing Sparkles import to lucide-react icons
 import { Clock, MapPin, DollarSign, Coffee, Camera, Mountain, Bus, Bed, Sparkles } from 'lucide-react';
-import { ItineraryResponse, Activity } from '../types';
+import { ItineraryResponse, Activity } from '../../../types';
+
 
 interface ItineraryDisplayProps {
   itinerary: ItineraryResponse;

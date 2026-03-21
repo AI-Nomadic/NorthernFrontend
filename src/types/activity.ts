@@ -5,7 +5,8 @@ export interface Activity {
     location: string;
     description: string;
     cost_estimate: number;
-    category: 'Food' | 'Sightseeing' | 'Adventure' | 'Relaxation' | 'Transport' | 'Nightlife';
+    category: 'Food' | 'Sightseeing' | 'Adventure' | 'Relaxation' | 'Transport' | 'Nightlife' | 'Lodging';
+
     durationMinutes: number;
     timeSlot?: {
         start: string;

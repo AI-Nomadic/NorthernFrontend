@@ -1,6 +1,8 @@
 import React, { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, DollarSign, Heart, Sparkles, ChevronDown, Check } from 'lucide-react';
-import { TravelFormData } from '../types';
+import { TravelFormData } from '../../../types';
+
 import { cn } from '../../../utils';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 
@@ -17,36 +19,146 @@ const INTERESTS_POOL = [
 
 const BUDGET_OPTIONS = ["Budget", "Standard", "Luxury"];
 
-const DayStepper: React.FC<{
-    value: number;
-    onChange: (val: number) => void;
-}> = ({ value, onChange }) => {
+const DateRangePicker: React.FC<{
+    startDate: string;
+    endDate: string;
+    onChange: (start: string, end: string) => void;
+}> = ({ startDate, endDate, onChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    useClickOutside(containerRef, () => setIsOpen(false));
+
+    const toLocalISO = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const start = new Date(startDate.replace(/-/g, '/'));
+    const end = new Date(endDate.replace(/-/g, '/'));
+
+    const formatDate = (date: Date) => {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    };
+
+    const [currentMonth, setCurrentMonth] = useState(new Date(start.getFullYear(), start.getMonth(), 1));
+
+    const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+    const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+
+    const days = [];
+    const daysInMonth = getDaysInMonth(currentMonth.getFullYear(), currentMonth.getMonth());
+    const firstDay = getFirstDayOfMonth(currentMonth.getFullYear(), currentMonth.getMonth());
+
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
+
+    const handleDateClick = (date: Date) => {
+        const dateStr = toLocalISO(date);
+        if (!startDate || (startDate && endDate && startDate !== endDate)) {
+            onChange(dateStr, dateStr);
+        } else {
+            const d1 = new Date(startDate.replace(/-/g, '/'));
+            if (date < d1) {
+                onChange(dateStr, startDate);
+            } else {
+                onChange(startDate, dateStr);
+            }
+        }
+    };
+
+    const isSelected = (date: Date) => {
+        const dateStr = toLocalISO(date);
+        return dateStr === startDate || dateStr === endDate;
+    };
+
+    const isInRange = (date: Date) => {
+        const dStr = toLocalISO(date);
+        return dStr > startDate && dStr < endDate;
+    };
+
     return (
-        <div className="space-y-2">
+        <div className="space-y-2 relative" ref={containerRef}>
             <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2 pl-1">
-                <Calendar className="w-3.5 h-3.5 text-primary" /> Duration
+                <Calendar className="w-3.5 h-3.5 text-primary" /> Trip Dates
             </label>
-            <div className="flex items-center gap-3 p-1.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-2xl">
-                <button
-                    type="button"
-                    onClick={() => onChange(Math.max(1, value - 1))}
-                    className="w-11 h-11 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-primary hover:border-primary/50 transition-all active:scale-95 shadow-sm"
-                >
-                    <span className="text-xl font-bold">−</span>
-                </button>
-                <div className="flex-1 text-center">
-                    <span className="text-lg font-bold text-slate-900 dark:text-white">
-                        {value} <span className="text-xs uppercase tracking-widest text-slate-400 dark:text-slate-500 ml-1">{value === 1 ? 'Day' : 'Days'}</span>
-                    </span>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => onChange(Math.min(14, value + 1))}
-                    className="w-11 h-11 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-primary hover:border-primary/50 transition-all active:scale-95 shadow-sm"
-                >
-                    <span className="text-xl font-bold">+</span>
-                </button>
-            </div>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={cn(
+                    "w-full flex items-center justify-between px-5 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 transition-all text-left",
+                    isOpen ? "ring-2 ring-primary border-transparent" : "hover:border-slate-300 dark:hover:border-slate-600"
+                )}
+            >
+                <span className="font-semibold text-slate-900 dark:text-white">
+                    {formatDate(start)} — {formatDate(end)}
+                </span>
+                <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform duration-300", isOpen && "rotate-180")} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden p-4 min-w-[300px]"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}
+                                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400"
+                            >
+                                ←
+                            </button>
+                            <h3 className="font-bold text-slate-900 dark:text-white">
+                                {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                            </h3>
+                            <button 
+                                type="button"
+                                onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}
+                                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-400"
+                            >
+                                →
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 text-center mb-1">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
+                                <div key={d} className="text-[10px] font-bold text-slate-400 uppercase">{d}</div>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-7 gap-1">
+                            {days.map((date, i) => (
+                                <div key={i} className="aspect-square relative flex items-center justify-center">
+                                    {date && (
+                                        <>
+                                            {isInRange(date) && (
+                                                <div className="absolute inset-0 bg-primary/10 dark:bg-primary/20" />
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDateClick(date)}
+                                                className={cn(
+                                                    "w-8 h-8 rounded-full text-xs font-semibold transition-all relative z-10",
+                                                    isSelected(date) 
+                                                        ? "bg-primary text-white shadow-lg shadow-primary/30 scale-110" 
+                                                        : isInRange(date)
+                                                            ? "text-primary hover:bg-primary/20"
+                                                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                                )}
+                                            >
+                                                {date.getDate()}
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -81,37 +193,57 @@ const CustomDropdown: React.FC<{
                 <ChevronDown className={cn("w-4 h-4 text-slate-400 transition-transform duration-300", isOpen && "rotate-180")} />
             </button>
 
-            {isOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden py-2 animate-in fade-in zoom-in-95 duration-200">
-                    {options.map((opt) => (
-                        <button
-                            key={opt}
-                            type="button"
-                            onClick={() => {
-                                onChange(opt);
-                                setIsOpen(false);
-                            }}
-                            className={cn(
-                                "w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors",
-                                value === opt 
-                                    ? "text-primary bg-primary/5" 
-                                    : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white"
-                            )}
-                        >
-                            {opt}
-                            {value === opt && <Check className="w-4 h-4" />}
-                        </button>
-                    ))}
-                </div>
-            )}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 overflow-hidden py-2"
+                    >
+                        {options.map((opt) => (
+                            <button
+                                key={opt}
+                                type="button"
+                                onClick={() => {
+                                    onChange(opt);
+                                    setIsOpen(false);
+                                }}
+                                className={cn(
+                                    "w-full flex items-center justify-between px-5 py-3 text-sm font-medium transition-colors",
+                                    value === opt 
+                                        ? "text-primary bg-primary/5" 
+                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white"
+                                )}
+                            >
+                                {opt}
+                                {value === opt && <Check className="w-4 h-4" />}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
 
 const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
+  const getInitialDates = () => {
+    const start = new Date();
+    const end = new Date();
+    end.setDate(start.getDate() + 3);
+    return {
+      startDate: start.toISOString().split('T')[0],
+      endDate: end.toISOString().split('T')[0]
+    };
+  };
+
+  const initialDates = getInitialDates();
+
   const [formData, setFormData] = useState<TravelFormData>({
     destination: '',
-    days: 3,
+    startDate: initialDates.startDate,
+    endDate: initialDates.endDate,
     budget: 'Standard',
     interests: INTERESTS_POOL.slice(0, 4).join(', ')
   });
@@ -136,7 +268,19 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    
+    // Calculate total days and month
+    const start = new Date(formData.startDate.replace(/-/g, '/'));
+    const end = new Date(formData.endDate.replace(/-/g, '/'));
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const numDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    const month = start.toLocaleDateString('en-US', { month: 'long' });
+
+    onSubmit({
+        ...formData,
+        numDays,
+        month
+    });
   };
 
   return (
@@ -162,9 +306,10 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
 
       {/* Grid Fields */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <DayStepper
-            value={formData.days}
-            onChange={(val) => setFormData({ ...formData, days: val })}
+        <DateRangePicker
+            startDate={formData.startDate}
+            endDate={formData.endDate}
+            onChange={(start, end) => setFormData({ ...formData, startDate: start, endDate: end })}
         />
         <CustomDropdown
             label="Budget"

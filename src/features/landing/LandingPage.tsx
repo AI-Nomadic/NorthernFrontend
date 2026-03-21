@@ -8,9 +8,9 @@ import ProvinceDiscovery from './components/ProvinceDiscovery';
 import TravelForm from './components/TravelForm';
 import ItineraryDisplay from './components/ItineraryDisplay';
 import Footer from './components/Footer';
-import { ItineraryResponse, TravelFormData } from './types';
-import { generateItinerary } from './services/geminiService';
-import { TripVibe, TripState } from '@types';
+import { ItineraryResponse, TravelFormData, TripVibe, TripState } from '../../types';
+import { generateItinerary } from '../../services/api';
+
 import './landing.css';
 
 interface LandingPageProps {
@@ -35,8 +35,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGenerate, loading: parentLo
 
             // Option 2: Also trigger the parent's generation if we want to sync with dashboard
             // We need to map TravelFormData to TripState
-            const startDate = new Date().toISOString().split('T')[0];
-            const endDate = new Date(Date.now() + formData.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            const startDate = formData.startDate;
+            const endDate = formData.endDate;
 
             // Note: We don't call onGenerate immediately here so user can see the preview first.
             // Or we could have a "Start Full Planning" button in ItineraryDisplay.
@@ -54,8 +54,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGenerate, loading: parentLo
 
     // Callback used when the user wants to go to the full dashboard, if applicable
     const handleGenerateFull = (formData: TravelFormData) => {
-        const startDate = new Date().toISOString().split('T')[0];
-        const endDate = new Date(Date.now() + formData.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const startDate = formData.startDate;
+        const endDate = formData.endDate;
 
         let vibe = TripVibe.ADVENTURE;
         if (formData.budget === 'Luxury') vibe = TripVibe.LUXURY;

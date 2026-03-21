@@ -100,3 +100,32 @@ export interface TripGenerationRequest {
         interests: string[];
     };
 }
+
+export interface TravelFormData {
+    destination: string;
+    startDate: string;
+    endDate: string;
+    budget: 'Budget' | 'Standard' | 'Luxury';
+    interests: string;
+    numDays?: number;
+    month?: string;
+}
+
+export interface ItineraryResponse {
+    id?: string;
+    trip_title: string;
+    featuredImage?: string;
+    total_days: number;
+    currency: string;
+    location?: {
+        province?: string;
+        region?: string;
+        slug?: string;
+    };
+    taxonomy?: {
+        theme?: string;
+        themeLabel?: string;
+    };
+    itinerary: DayPlan[];
+    sidebar_suggestions: Suggestion[];
+}
