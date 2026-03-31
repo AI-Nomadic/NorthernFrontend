@@ -14,7 +14,7 @@ import { generateItinerary } from '../../services/api';
 import './landing.css';
 
 interface LandingPageProps {
-    onGenerate: (trip: TripState) => void;
+    onGenerate: (data: TravelFormData) => void;
     loading: boolean;
 }
 
@@ -26,30 +26,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onGenerate, loading: parentLo
     const isLoading = parentLoading || localLoading;
 
     const handlePlanTrip = async (formData: TravelFormData) => {
-        setLocalLoading(true);
-        setError(null);
-        try {
-            // Option 1: Generate preview on landing page (as in northen-landing)
-            const result = await generateItinerary(formData);
-            setItinerary(result);
-
-            // Option 2: Also trigger the parent's generation if we want to sync with dashboard
-            // We need to map TravelFormData to TripState
-            const startDate = formData.startDate;
-            const endDate = formData.endDate;
-
-            // Note: We don't call onGenerate immediately here so user can see the preview first.
-            // Or we could have a "Start Full Planning" button in ItineraryDisplay.
-
-            // Smooth scroll to results
-            setTimeout(() => {
-                document.getElementById('itinerary-results')?.scrollIntoView({ behavior: 'smooth' });
-            }, 100);
-        } catch (err) {
-            setError('Something went wrong generating your Canadian adventure. Please try again.');
-        } finally {
-            setLocalLoading(false);
-        }
+        // Go straight to full generation/dashboard flow
+        onGenerate(formData);
     };
 
     // Callback used when the user wants to go to the full dashboard, if applicable

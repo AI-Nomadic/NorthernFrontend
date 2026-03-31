@@ -7,8 +7,8 @@ import GalleryPage from './pages/GalleryPage';
 import ExplorePage from './pages/ExplorePage';
 import TripDetailsPage from './pages/TripDetailsPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import { TripState } from '@types';
-import { fetchItinerary, setTripState, resetDashboard } from './state/slices/dashboardSlice';
+import { TravelFormData } from '@types';
+import { fetchItinerary, resetDashboard, generateAITrip } from './state/slices/dashboardSlice';
 import { logout } from './state/slices/userSlice';
 import { useAppDispatch, useAppSelector } from './state';
 
@@ -61,11 +61,12 @@ const App: React.FC = () => {
     }
   }, [theme]);
 
-  const handleGenerate = async (trip: TripState) => {
+  const handleGenerate = async (formData: TravelFormData) => {
     setLoading(true);
-    dispatch(setTripState(trip));
     try {
-      await dispatch(fetchItinerary('current')).unwrap();
+      const result = await dispatch(generateAITrip(formData)).unwrap() as any;
+      console.log('--- TRIP SKELETON RECEIVED ---');
+      console.log(result);
       navigate('/dashboard');
     } catch (err) {
       console.error('Itinerary generation failed', err);

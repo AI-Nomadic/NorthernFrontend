@@ -22,7 +22,9 @@ import {
   updateDay,
   fetchItinerary,
   addDay,
-  toggleTripPublish
+  toggleTripPublish,
+  updateDayData,
+  setHydrating
 } from '../../state/slices/dashboardSlice';
 import { useCollab } from './hooks/useCollab';
 import {
@@ -118,8 +120,40 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
     handleRefresh,
   } = useDiscovery(tripState);
 
+  const hydrating = useAppSelector(state => state.dashboard.hydrating);
   const [manualAccommodationDayId, setManualAccommodationDayId] = React.useState<string | null>(null);
   const [manualActivityDayId, setManualActivityDayId] = React.useState<string | null>(null);
+
+  // --- HYDRATION STREAM ---
+  React.useEffect(() => {
+    if (!hydrating || !itinerary?.id) return;
+
+    console.log(`📡 Starting Hydration Stream for Trip: ${itinerary.id}`);
+    const PLANNER_BASE = import.meta.env.VITE_PLANNER_API_URL || 'http://localhost:8888/api/planner';
+    const eventSource = new EventSource(`${PLANNER_BASE}/stream/${itinerary.id}`);
+
+    eventSource.addEventListener('day_hydrated', (event) => {
+        const data = JSON.parse(event.data);
+        console.log(`✅ Day ${data.dayIndex + 1} Hydrated:`, data.dayData);
+        dispatch(updateDayData({ dayIndex: data.dayIndex, dayData: data.dayData }));
+    });
+
+    eventSource.addEventListener('complete', () => {
+        console.log('🏁 Hydration Stream Complete');
+        dispatch(setHydrating(false));
+        eventSource.close();
+    });
+
+    eventSource.onerror = (err) => {
+        console.error('❌ Hydration Stream Error:', err);
+        dispatch(setHydrating(false));
+        eventSource.close();
+    };
+
+    return () => {
+        eventSource.close();
+    };
+  }, [hydrating, itinerary?.id, dispatch]);
 
   // Handlers
   const handleRemoveAccommodation = (dayId: string) => {
@@ -345,14 +379,15 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
                   id: self.crypto.randomUUID(),
                   title: '',
                   description: 'New Activity',
-                  time: 'TBD',
+                  timeSlot: { start: 'TBD', end: 'TBD' },
                   durationMinutes: 60,
                   category: 'Sightseeing',
                   cost_estimate: 0,
                   location: 'TBD',
                   isDraft: true,
                   type: 'activity',
-                  status: 'planned'
+                  status: 'planned',
+                  imageGallery: []
                 };
                 dispatch(addActivity({ dayId, activity: newActivity }));
                 broadcast('ACTIVITY_ADDED', { dayId, activity: newActivity });

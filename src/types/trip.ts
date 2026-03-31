@@ -117,15 +117,27 @@ export interface ItineraryResponse {
     featuredImage?: string;
     total_days: number;
     currency: string;
-    location?: {
-        province?: string;
-        region?: string;
+    location: {
+        province: string;
+        region: string;
         slug?: string;
     };
-    taxonomy?: {
-        theme?: string;
-        themeLabel?: string;
+    taxonomy: {
+        theme: string;
+        themeLabel: string;
+        travelType: string;
+        travelTypeLabel: string;
     };
+    metrics: {
+        budgetRange: string;
+        difficulty: string;
+        activityLevel: string;
+    };
+    summaryStats: {
+        totalActivities: number;
+        avgCostPerDay: number;
+    };
+    tags: string[];
     itinerary: DayPlan[];
     sidebar_suggestions: Suggestion[];
 }

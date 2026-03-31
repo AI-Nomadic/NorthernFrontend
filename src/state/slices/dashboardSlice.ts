@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { Trip, DayPlan, Activity, Accommodation, TripState, TripVibe } from '@types';
+import { Trip, DayPlan, Activity, Accommodation, TripState, TripVibe, TravelFormData } from '@types';
 import { recalculateDayTimeline } from '@features/dashboard/utils';
 import { getTrip, getAllTrips, updateTrip, togglePublishTrip } from '@services/api';
 import { RootState } from '../store';
@@ -61,6 +61,15 @@ export const persistItinerary = createAsyncThunk(
 );
 
 
+export const generateAITrip = createAsyncThunk(
+    'dashboard/generateAITrip',
+    async (formData: TravelFormData) => {
+        const { generateItinerary } = await import('@services/api');
+        const skeleton = await generateItinerary(formData);
+        return skeleton;
+    }
+);
+
 interface TrashItem {
     id: string; // unique trash id
     originalDayId: string;
@@ -72,6 +81,7 @@ interface TrashItem {
 
 interface DashboardState {
     loading: boolean;
+    hydrating: boolean;
     error: string | null;
     // -- Data State --
     // Stores the full trip API response
@@ -101,6 +111,7 @@ interface DashboardState {
 
 const initialState: DashboardState = {
     loading: false,
+    hydrating: false,
     error: null,
     itinerary: null,
     tripState: null,
@@ -130,12 +141,23 @@ const dashboardSlice = createSlice({
             state.tripState = action.payload;
         },
 
+        setHydrating: (state, action: PayloadAction<boolean>) => {
+            state.hydrating = action.payload;
+        },
+
+        updateDayData: (state, action: PayloadAction<{ dayIndex: number; dayData: DayPlan }>) => {
+            if (state.itinerary && state.itinerary.itinerary[action.payload.dayIndex]) {
+                state.itinerary.itinerary[action.payload.dayIndex] = action.payload.dayData;
+            }
+        },
+
         resetDashboard: (state) => {
             state.itinerary = null;
             state.tripState = null;
             state.trashBin = [];
             state.selectedActivity = null;
             state.selectedAccommodation = null;
+            state.hydrating = false;
         },
 
         // Drag-and-Drop Actions
@@ -545,6 +567,36 @@ const dashboardSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message || 'Failed to fetch itinerary';
             })
+            // AI Generation
+            .addCase(generateAITrip.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+                state.hydrating = true;
+            })
+            .addCase(generateAITrip.fulfilled, (state, action) => {
+                state.loading = false;
+                state.itinerary = action.payload as Trip;
+                
+                // Persist last-opened trip ID
+                localStorage.setItem('northern_last_trip_id', action.payload.id || '');
+
+                // Derive TripState
+                const firstDay = action.payload.itinerary[0];
+                const lastDay = action.payload.itinerary[action.payload.itinerary.length - 1];
+                state.tripState = {
+                    destination: action.payload.trip_title,
+                    startDate: firstDay?.date || new Date().toISOString().split('T')[0],
+                    endDate: lastDay?.date || new Date().toISOString().split('T')[0],
+                    vibe: TripVibe.RELAX,
+                    budget: 1000,
+                    travelers: 2
+                };
+            })
+            .addCase(generateAITrip.rejected, (state, action) => {
+                state.loading = false;
+                state.hydrating = false;
+                state.error = action.error.message || 'AI Generation failed';
+            })
             // Fetch Saved Trips
             .addCase(fetchSavedTrips.pending, (state) => {
                 state.loading = true;
@@ -598,7 +650,9 @@ export const {
     emptyTrash,
     selectDay,
     setTrashBinOpen,
-    renameTrip
+    renameTrip,
+    updateDayData,
+    setHydrating
 } = dashboardSlice.actions;
 
 export default dashboardSlice.reducer;
