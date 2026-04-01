@@ -16,5 +16,10 @@ export interface Accommodation {
     imageGallery: string[]; // URLs
     amenities: string[];
     description: string;
+    coordinates?: { lat: number; lng: number };
+    placeId?: string;
+    user_ratings_total?: number;
+    website?: string;
+    openingHours?: string[];
     details?: Record<string, any>; // Flexible for extra data
 }

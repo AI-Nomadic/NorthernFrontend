@@ -21,7 +21,7 @@ import {
     reorderDays,
     swapDays,
     setAccommodation,
-    persistItinerary,
+    autosaveItinerary,
 } from '@state/slices/dashboardSlice';
 import { DRAG_TYPES } from '../utils';
 import { CollabEventType, CollabPayloads } from './useCollab';
@@ -139,7 +139,7 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                             newIndex: insertionIndex as number
                         });
                     }
-                    dispatch(persistItinerary());
+                    dispatch(autosaveItinerary());
                 } else {
                     dispatch(dragCancel());
                 }
@@ -161,7 +161,7 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                         targetIndex: insertionIndex
                     });
                 }
-                dispatch(persistItinerary());
+                dispatch(autosaveItinerary());
             }
         }
 
@@ -180,7 +180,7 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                         newIndex: newIdx
                     });
                 }
-                dispatch(persistItinerary());
+                dispatch(autosaveItinerary());
             } else {
                 dispatch(dragCancel());
             }
@@ -237,7 +237,7 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                             insertionIndex,
                         });
                     }
-                    dispatch(persistItinerary());
+                    dispatch(autosaveItinerary());
                 }
             } else {
                 dispatch(dragCancel());
@@ -265,7 +265,7 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                         newHotel: activeDragItem
                     });
                 }
-                dispatch(persistItinerary());
+                dispatch(autosaveItinerary());
             } else {
                 dispatch(dragCancel());
             }

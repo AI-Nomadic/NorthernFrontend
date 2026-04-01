@@ -2,8 +2,8 @@ import { Trip, TripGenerationRequest, Suggestion, TravelFormData, ItineraryRespo
 
 
 const MOCK_API_BASE = 'http://localhost:3001';
-const REAL_API_BASE = 'http://localhost:8090/api'; // ← All traffic through API Gateway
-const PLANNER_API_BASE = import.meta.env.VITE_PLANNER_API_URL || 'http://localhost:8888/api/planner';
+const REAL_API_BASE = 'http://localhost:8090/api'; // Trip Service gateway entry
+const PLANNER_API_BASE = 'http://localhost:8090/api/planner'; // AI Planner gateway entry
 
 
 /**
@@ -60,14 +60,34 @@ export const getAllTrips = async (): Promise<Trip[]> => {
 };
 
 /**
- * Mock creating a trip (returns stub from db.json).
+ * Create a new trip on the backend.
  */
-export const createTrip = async (request: TripGenerationRequest): Promise<Trip> => {
-    console.log('Mocking Trip Generation for:', request);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    const trip = await getTrip('trp_current');
-    if (!trip) throw new Error('Failed to generate trip (mock data missing)');
-    return trip;
+export const createTrip = async (trip: Trip): Promise<Trip | null> => {
+    try {
+        const response = await fetch(`${REAL_API_BASE}/trips`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(trip),
+        });
+        if (!response.ok) throw new Error(`Failed to create trip: ${response.statusText}`);
+        return await response.json();
+    } catch (error) {
+        console.error('Error creating trip:', error);
+        return null;
+    }
+};
+
+export const persistTrip = async (trip: Trip): Promise<Trip | null> => {
+    // Attempt to update first (standard Upsert pattern)
+    // If it fails (due to 404 Not Found or 500 Unknown), we move to create
+    const updated = await updateTrip(trip);
+    if (updated) {
+        console.log('✅ Trip updated successfully');
+        return updated;
+    }
+
+    console.warn(`⚠️ Update failed for trip ${trip.id}. Attempting to create (POST) instead...`);
+    return createTrip(trip);
 };
 
 /**
@@ -270,4 +290,19 @@ export const generateItinerary = async (data: TravelFormData): Promise<Itinerary
 
     return await response.json() as ItineraryResponse;
 };
+/**
+ * Audit a trip using the Travel Data Architect logic in the AI-Planner.
+ */
+export const auditTrip = async (trip: Trip): Promise<Trip> => {
+    const response = await fetch(`${PLANNER_API_BASE}/audit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trip),
+    });
 
+    if (!response.ok) {
+        throw new Error('Failed to audit trip');
+    }
+
+    return await response.json() as Trip;
+};

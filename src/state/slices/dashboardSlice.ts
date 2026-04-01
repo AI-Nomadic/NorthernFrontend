@@ -34,17 +34,19 @@ export const toggleTripPublish = createAsyncThunk(
     }
 );
 
-export const persistItinerary = createAsyncThunk(
-    'dashboard/persistItinerary',
+/**
+ * Fast Autosave: Basic persistence without AI audit.
+ */
+export const autosaveItinerary = createAsyncThunk(
+    'dashboard/autosave',
     async (_, { getState }) => {
         const state = getState() as RootState;
         const currentItinerary = state.dashboard.itinerary;
+        const { persistTrip } = await import('@services/api');
 
-        if (!currentItinerary) {
-            console.error('Missing itinerary for persistence');
-            return null;
-        }
+        if (!currentItinerary) return null;
 
+        // Ensure data is indexed correctly before saving
         const cleanedItinerary = {
             ...currentItinerary,
             itinerary: currentItinerary.itinerary.map((day, index) => ({
@@ -54,9 +56,42 @@ export const persistItinerary = createAsyncThunk(
             total_days: currentItinerary.itinerary.length
         };
 
-        const updatedTrip = await updateTrip(cleanedItinerary);
-        if (!updatedTrip) throw new Error('Failed to update trip on backend');
-        return updatedTrip;
+        return await persistTrip(cleanedItinerary);
+    }
+);
+
+/**
+ * Manual Architect Save: Performs Gemini audit then persists.
+ */
+export const architectAuditAndSave = createAsyncThunk(
+    'dashboard/architectAuditAndSave',
+    async (_, { getState }) => {
+        const state = getState() as RootState;
+        const currentItinerary = state.dashboard.itinerary;
+        const { persistTrip, auditTrip } = await import('@services/api');
+
+        if (!currentItinerary) {
+            console.error('Missing itinerary for architect save');
+            return null;
+        }
+
+        // --- STEP 1: TRAVEL DATA ARCHITECT AUDIT ---
+        // Post-Review logic for location normalization and vibe detection
+        const auditedTrip = await auditTrip(currentItinerary);
+
+        // --- STEP 2: HYDRATE METADATA & CLEAN ---
+        const cleanedItinerary = {
+            ...auditedTrip,
+            itinerary: auditedTrip.itinerary.map((day, index) => ({
+                ...day,
+                dayNumber: index + 1
+            })),
+            total_days: auditedTrip.itinerary.length
+        };
+
+        const result = await persistTrip(cleanedItinerary);
+        if (!result) throw new Error('Failed to persist audited trip');
+        return result;
     }
 );
 
@@ -609,8 +644,13 @@ const dashboardSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message || 'Failed to fetch saved trips';
             })
-            // Persist Itinerary
-            .addCase(persistItinerary.fulfilled, (state, action) => {
+            // Persistence Handlers
+            .addCase(autosaveItinerary.fulfilled, (state, action) => {
+                if (action.payload) {
+                    state.itinerary = action.payload;
+                }
+            })
+            .addCase(architectAuditAndSave.fulfilled, (state, action) => {
                 if (action.payload) {
                     state.itinerary = action.payload;
                 }
