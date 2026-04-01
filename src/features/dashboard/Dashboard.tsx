@@ -1,6 +1,6 @@
 import React from 'react';
 import { DndContext, rectIntersection, MeasuringStrategy } from '@dnd-kit/core';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useBlocker, useBeforeUnload } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, PanelLeftOpen } from 'lucide-react';
 import { Activity, Accommodation } from '@types';
@@ -71,6 +71,44 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const isDirty = useAppSelector(state => state.dashboard.isDirty);
+
+  // -- Navigation Guard Logic --
+  // Blocks navigation if the user has unsaved changes that haven't been audited
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isDirty && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // Browser refresh/tab close protection
+  useBeforeUnload(
+    React.useCallback(
+      (event) => {
+        if (isDirty) {
+          event.preventDefault();
+          return (event.returnValue = "Changes you made may not be saved. Do you really want to leave?");
+        }
+      },
+      [isDirty]
+    )
+  );
+
+  const handleSaveAndExit = async () => {
+    if (itinerary) {
+      setIsSaving(true);
+      try {
+        await dispatch(architectAuditAndSave());
+        blocker.proceed?.();
+      } finally {
+        setIsSaving(false);
+      }
+    }
+  };
+
+  const handleCancelExit = () => {
+    blocker.reset?.();
+  };
 
   // Early return — caller (DashboardRoute in App.tsx) guarantees itinerary is loaded
   if (!itinerary || !tripState) return null;
@@ -517,6 +555,58 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
         isDeleting={isDeleting}
       />
 
+      {/* -- Unsaved Changes (Navigation Guard) Modal -- */}
+      {blocker.state === "blocked" && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+          {/* Glassmorphic Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={handleCancelExit}
+          />
+          
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="relative w-full max-w-md bg-white dark:bg-surface-a0 rounded-3xl overflow-hidden shadow-2xl border border-white/20"
+          >
+            {/* Header with Background Gradient */}
+            <div className="h-32 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 flex items-center justify-center">
+              <div className="p-4 bg-white/20 backdrop-blur-xl rounded-2xl border border-white/30">
+                <PanelLeftOpen className="w-8 h-8 text-white" />
+              </div>
+            </div>
+
+            <div className="p-8 text-center">
+              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
+                Wait! You have unsaved changes
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-8 px-4 leading-relaxed">
+                Your edits were autosaved, but they haven't been <span className="text-indigo-600 dark:text-indigo-400 font-medium">Audited by AI</span> yet. Saving now will normalize your data and detect vibes.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleSaveAndExit}
+                  disabled={isSaving}
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl transition-all shadow-lg hover:shadow-indigo-200"
+                >
+                  {isSaving ? "Auditing IT..." : "Save & Finish (Audit)"}
+                </button>
+                
+                <button
+                  onClick={handleCancelExit}
+                  className="w-full py-4 text-gray-500 hover:text-gray-900 dark:hover:text-white font-medium transition-all"
+                >
+                  Keep Editing
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </DndContext>
   );
 };

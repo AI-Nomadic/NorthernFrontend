@@ -76,8 +76,14 @@ export const architectAuditAndSave = createAsyncThunk(
         }
 
         // --- STEP 1: TRAVEL DATA ARCHITECT AUDIT ---
+        console.log("--- [DEBUG] STARTING AI ARCHITECT AUDIT ---");
+        console.log("ITINERARY BEFORE AUDIT:", JSON.parse(JSON.stringify(currentItinerary))); 
+
         // Post-Review logic for location normalization and vibe detection
         const auditedTrip = await auditTrip(currentItinerary);
+
+        console.log("--- [DEBUG] AUDIT COMPLETE ---");
+        console.log("ITINERARY AFTER AUDIT:", JSON.parse(JSON.stringify(auditedTrip)));
 
         // --- STEP 2: HYDRATE METADATA & CLEAN ---
         const cleanedItinerary = {
@@ -142,6 +148,7 @@ interface DashboardState {
     selectedDayId: string | null;
     selectedActivity: Activity | null;
     selectedAccommodation: Accommodation | null;
+    isDirty: boolean; 
 }
 
 const initialState: DashboardState = {
@@ -162,6 +169,7 @@ const initialState: DashboardState = {
     selectedDayId: null,
     selectedActivity: null,
     selectedAccommodation: null,
+    isDirty: false,
 };
 
 const dashboardSlice = createSlice({
@@ -221,8 +229,8 @@ const dashboardSlice = createSlice({
                 ? action.payload.insertionIndex
                 : currentActivities.length;
 
-            currentActivities.splice(insertIndex, 0, action.payload.activity);
             state.itinerary.itinerary[dayIndex].activities = recalculateDayTimeline(currentActivities);
+            state.isDirty = true;
         },
 
         reorderActivitiesWithinDay: (state, action: PayloadAction<{ dayId: string; oldIndex: number; newIndex: number }>) => {
@@ -237,6 +245,7 @@ const dashboardSlice = createSlice({
 
             state.itinerary.itinerary[dayIndex].activities = recalculateDayTimeline(activities);
             state.dragState = initialState.dragState;
+            state.isDirty = true;
         },
 
         moveActivityBetweenDays: (
@@ -272,6 +281,7 @@ const dashboardSlice = createSlice({
             state.itinerary.itinerary[sourceDayIndex].activities = recalculateDayTimeline(sourceActivities);
             state.itinerary.itinerary[targetDayIndex].activities = recalculateDayTimeline(targetActivities);
             state.dragState = initialState.dragState;
+            state.isDirty = true;
         },
 
         removeActivity: (state, action: PayloadAction<{ dayId: string; activityId: string }>) => {
@@ -297,6 +307,7 @@ const dashboardSlice = createSlice({
 
             const newActivities = activities.filter(a => a.id !== action.payload.activityId);
             state.itinerary.itinerary[dayIndex].activities = recalculateDayTimeline(newActivities);
+            state.isDirty = true;
         },
 
         reorderDays: (state, action: PayloadAction<{ oldIndex: number; newIndex: number }>) => {
@@ -308,6 +319,7 @@ const dashboardSlice = createSlice({
 
             state.itinerary.itinerary = days.map((d, i) => ({ ...d, dayNumber: i + 1 }));
             state.dragState = initialState.dragState;
+            state.isDirty = true;
         },
 
         swapDays: (state, action: PayloadAction<{ index1: number; index2: number }>) => {
@@ -320,6 +332,7 @@ const dashboardSlice = createSlice({
 
             state.itinerary.itinerary = days.map((d, i) => ({ ...d, dayNumber: i + 1 }));
             state.dragState = initialState.dragState;
+            state.isDirty = true;
         },
 
         setAccommodation: (state, action: PayloadAction<{ dayId: string; accommodation: Accommodation | null }>) => {
@@ -344,6 +357,7 @@ const dashboardSlice = createSlice({
                 } else {
                     state.itinerary.itinerary[dayIndex].accommodation = action.payload.accommodation;
                 }
+                state.isDirty = true;
             }
         },
 
@@ -364,6 +378,7 @@ const dashboardSlice = createSlice({
                     });
                 }
                 delete state.itinerary.itinerary[dayIndex].accommodation;
+                state.isDirty = true;
             }
         },
 
@@ -387,6 +402,7 @@ const dashboardSlice = createSlice({
             };
             state.itinerary.itinerary.push(newDay);
             state.itinerary.total_days = newDayNum;
+            state.isDirty = true;
         },
 
         renameTrip: (state, action: PayloadAction<string>) => {
@@ -395,6 +411,7 @@ const dashboardSlice = createSlice({
             if (state.tripState) {
                 state.tripState.destination = action.payload; // Keep in sync if destination is used as title
             }
+            state.isDirty = true;
         },
 
         deleteDay: (state, action: PayloadAction<{ dayId: string }>) => {
@@ -432,6 +449,7 @@ const dashboardSlice = createSlice({
                 dayNumber: index + 1
             }));
             state.itinerary.total_days = newItinerary.length;
+            state.isDirty = true;
         },
 
         updateActivity: (state, action: PayloadAction<{ dayId: string; activityId: string; updates: Partial<Activity> }>) => {
@@ -450,6 +468,7 @@ const dashboardSlice = createSlice({
 
             // Recalculate timeline if time/duration changed, or just to be safe
             state.itinerary.itinerary[dayIndex].activities = recalculateDayTimeline(state.itinerary.itinerary[dayIndex].activities);
+            state.isDirty = true;
         },
 
         updateDay: (state, action: PayloadAction<{ dayId: string; updates: Partial<DayPlan> }>) => {
@@ -461,6 +480,7 @@ const dashboardSlice = createSlice({
                 ...state.itinerary.itinerary[dayIndex],
                 ...action.payload.updates
             };
+            state.isDirty = true;
         },
 
         // -- Trash Actions --
@@ -541,6 +561,7 @@ const dashboardSlice = createSlice({
             if (state.trashBin.length === 0) {
                 state.trashBinOpen = false;
             }
+            state.isDirty = true;
         },
 
         emptyTrash: (state) => {
@@ -597,6 +618,7 @@ const dashboardSlice = createSlice({
                     budget: 1000,
                     travelers: 2
                 };
+                state.isDirty = false;
             })
             .addCase(fetchItinerary.rejected, (state, action) => {
                 state.loading = false;
@@ -626,6 +648,7 @@ const dashboardSlice = createSlice({
                     budget: 1000,
                     travelers: 2
                 };
+                state.isDirty = false;
             })
             .addCase(generateAITrip.rejected, (state, action) => {
                 state.loading = false;
@@ -653,6 +676,7 @@ const dashboardSlice = createSlice({
             .addCase(architectAuditAndSave.fulfilled, (state, action) => {
                 if (action.payload) {
                     state.itinerary = action.payload;
+                    state.isDirty = false; // Audit save resets dirty flag
                 }
             })
             // Toggle Publish

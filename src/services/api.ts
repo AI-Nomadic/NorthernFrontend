@@ -3,7 +3,7 @@ import { Trip, TripGenerationRequest, Suggestion, TravelFormData, ItineraryRespo
 
 const MOCK_API_BASE = 'http://localhost:3001';
 const REAL_API_BASE = 'http://localhost:8090/api'; // Trip Service gateway entry
-const PLANNER_API_BASE = 'http://localhost:8090/api/planner'; // AI Planner gateway entry
+const PLANNER_API_BASE = import.meta.env.VITE_PLANNER_API_URL || 'http://localhost:8090/api/planner';
 
 
 /**
@@ -304,5 +304,7 @@ export const auditTrip = async (trip: Trip): Promise<Trip> => {
         throw new Error('Failed to audit trip');
     }
 
-    return await response.json() as Trip;
+    const auditedResult = await response.json() as Trip;
+    console.log("--- [API] AUDIT RESPONSE RECEIVED ---", auditedResult);
+    return auditedResult;
 };
