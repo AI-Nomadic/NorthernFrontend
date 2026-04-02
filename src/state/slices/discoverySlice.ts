@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { getSuggestions } from '@services/api';
+import { getSuggestions, fetchSidebarSuggestions } from '@services/api';
+import { ActivitySkeleton } from '@types';
 import { RootState } from '../store';
 
 export type DiscoveryTab = 'culinary' | 'exploration' | 'stay' | 'events';
@@ -22,6 +23,7 @@ export const FILTERS_BY_TAB: Record<string, string[]> = {
 interface DiscoveryState {
     activeTab: DiscoveryTab;
     allItems: any[]; // Store ALL fetched suggestions here
+    suggestionSkeletons: ActivitySkeleton[]; 
     activeFilters: string[];
     loading: boolean;
     error: string | null;
@@ -30,6 +32,7 @@ interface DiscoveryState {
 const initialState: DiscoveryState = {
     activeTab: 'exploration',
     allItems: [],
+    suggestionSkeletons: [],
     activeFilters: [],
     loading: false,
     error: null,
@@ -42,6 +45,20 @@ export const fetchDiscoveryItems = createAsyncThunk(
     async () => {
         // Fetch all suggestions from the mock DB via the centralized service
         return await getSuggestions({}) as any[];
+    }
+);
+
+export const fetchAISuggestions = createAsyncThunk(
+    'discovery/fetchAISuggestions',
+    async ({ destination, tags, excludeNames = [] }: { destination: string, tags: string[], excludeNames?: string[] }) => {
+        return await fetchSidebarSuggestions(destination, tags, 6, excludeNames);
+    }
+);
+
+export const fetchReplacementSuggestion = createAsyncThunk(
+    'discovery/fetchReplacementSuggestion',
+    async ({ destination, tags, excludeNames = [] }: { destination: string, tags: string[], excludeNames?: string[] }) => {
+        return await fetchSidebarSuggestions(destination, tags, 1, excludeNames);
     }
 );
 
@@ -64,6 +81,9 @@ const discoverySlice = createSlice({
         clearFilters: (state) => {
             state.activeFilters = [];
         },
+        removeSuggestion: (state, action: PayloadAction<string>) => {
+            state.suggestionSkeletons = state.suggestionSkeletons.filter(s => s.id !== action.payload);
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -78,11 +98,29 @@ const discoverySlice = createSlice({
             .addCase(fetchDiscoveryItems.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message || 'Failed to fetch discovery items';
+            })
+            // AI Suggestions
+            .addCase(fetchAISuggestions.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchAISuggestions.fulfilled, (state, action) => {
+                state.loading = false;
+                state.suggestionSkeletons = action.payload;
+            })
+            .addCase(fetchAISuggestions.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to fetch AI suggestions';
+            })
+            // Replacement AI Suggestion
+            .addCase(fetchReplacementSuggestion.fulfilled, (state, action) => {
+                // Append the newly fetched suggestion(s) to the list
+                state.suggestionSkeletons = [...state.suggestionSkeletons, ...action.payload];
             });
     },
 });
 
-export const { setActiveTab, toggleFilter, clearFilters } = discoverySlice.actions;
+export const { setActiveTab, toggleFilter, clearFilters, removeSuggestion } = discoverySlice.actions;
 
 // -- Selectors --
 
@@ -92,8 +130,18 @@ export const selectDiscoveryLoading = (state: RootState) => state.discovery.load
 
 // Client-side filtering selector
 export const selectDiscoveryItems = createSelector(
-    [(state: RootState) => state.discovery.allItems, (state: RootState) => state.discovery.activeTab, (state: RootState) => state.discovery.activeFilters],
-    (allItems, tab, filters) => {
+    [
+        (state: RootState) => state.discovery.allItems, 
+        (state: RootState) => state.discovery.suggestionSkeletons,
+        (state: RootState) => state.discovery.activeTab, 
+        (state: RootState) => state.discovery.activeFilters
+    ],
+    (allItems, skeletons, tab, filters) => {
+        // If we have AI skeletons and we are on Exploration tab, prioritize them
+        if (tab === 'exploration' && skeletons.length > 0) {
+            return skeletons;
+        }
+
         const allowedCategories = TAB_CATEGORY_MAP[tab] || [];
 
         return allItems.filter(item => {

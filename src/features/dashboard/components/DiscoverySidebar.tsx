@@ -3,6 +3,8 @@ import { Sparkles, PanelLeftClose, Compass, Utensils, Bed, Music, RefreshCcw } f
 import { Link } from 'react-router-dom';
 import { cn } from '@utils';
 import { SidebarDraggableItem } from './SidebarDraggableItem';
+import { SuggestionCard } from './SuggestionCard';
+import { DiscoveryShimmer } from './DiscoveryShimmer';
 import { SidebarFooter } from './SidebarFooter';
 import { FilterBar } from './FilterBar';
 
@@ -88,15 +90,29 @@ export const DiscoverySidebar: React.FC<DiscoverySidebarProps> = ({
 
             {/* -- Draggable Items List -- */}
             {/* Renders a list of items that can be dragged onto the canvas */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/30 dark:bg-transparent">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/30 dark:bg-transparent custom-scrollbar">
                 {isLoading ? (
-                    <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 gap-2">
-                        <RefreshCcw className="w-6 h-6 animate-spin" />
-                        <span className="text-xs font-bold">Curating Suggestions...</span>
+                    <DiscoveryShimmer />
+                ) : discoveryItems.length > 0 ? (
+                    discoveryItems.map((item, idx) => (
+                        item.isSkeleton ? (
+                            <SuggestionCard key={item.id || idx} suggestion={item} />
+                        ) : (
+                            <SidebarDraggableItem key={idx} item={item} type={activeTab === 'stay' ? 'accommodation' : 'activity'} />
+                        )
+                    ))
+                ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 gap-4 opacity-60">
+                        <Compass className="w-12 h-12 stroke-[1.5px]" />
+                        <span className="text-sm font-medium">No results found for these vibes.</span>
+                        <button 
+                            onClick={onRefresh}
+                            className="text-xs font-bold text-indigo-500 hover:text-indigo-400 transition-colors uppercase tracking-widest"
+                        >
+                            Try Shuffling
+                        </button>
                     </div>
-                ) : discoveryItems.map((item, idx) => (
-                    <SidebarDraggableItem key={idx} item={item} type={activeTab === 'stay' ? 'accommodation' : 'activity'} />
-                ))}
+                )}
             </div>
 
             {/* -- Footer -- */}

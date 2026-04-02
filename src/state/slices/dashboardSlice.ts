@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { Trip, DayPlan, Activity, Accommodation, TripState, TripVibe, TravelFormData } from '@types';
 import { recalculateDayTimeline } from '@features/dashboard/utils';
-import { getTrip, getAllTrips, updateTrip, togglePublishTrip } from '@services/api';
+import { getTrip, getAllTrips, updateTrip, togglePublishTrip, hydrateActivity as hydrateActivityAPI } from '@services/api';
 import { RootState } from '../store';
 
 // -- Async Thunks --
@@ -108,6 +108,14 @@ export const generateAITrip = createAsyncThunk(
         const { generateItinerary } = await import('@services/api');
         const skeleton = await generateItinerary(formData);
         return skeleton;
+    }
+);
+
+export const performHydration = createAsyncThunk(
+    'dashboard/hydrateActivity',
+    async ({ dayId, activity, destination, prevCoords, startTime }: { dayId: string; activity: any; destination: string; prevCoords?: { lat: number; lng: number }; startTime?: string }) => {
+        const hydrated = await hydrateActivityAPI(activity, destination, prevCoords, startTime);
+        return { dayId, activityId: activity.id, hydrated };
     }
 );
 
@@ -228,6 +236,8 @@ const dashboardSlice = createSlice({
             const insertIndex = action.payload.insertionIndex !== undefined
                 ? action.payload.insertionIndex
                 : currentActivities.length;
+
+            currentActivities.splice(insertIndex, 0, action.payload.activity);
 
             state.itinerary.itinerary[dayIndex].activities = recalculateDayTimeline(currentActivities);
             state.isDirty = true;
@@ -611,7 +621,7 @@ const dashboardSlice = createSlice({
                 const firstDay = action.payload.itinerary[0];
                 const lastDay = action.payload.itinerary[action.payload.itinerary.length - 1];
                 state.tripState = {
-                    destination: action.payload.trip_title,
+                    destination: action.payload.location?.region || action.payload.location?.province || action.payload.trip_title,
                     startDate: firstDay?.date || new Date().toISOString().split('T')[0],
                     endDate: lastDay?.date || new Date().toISOString().split('T')[0],
                     vibe: TripVibe.RELAX,
@@ -641,7 +651,7 @@ const dashboardSlice = createSlice({
                 const firstDay = action.payload.itinerary[0];
                 const lastDay = action.payload.itinerary[action.payload.itinerary.length - 1];
                 state.tripState = {
-                    destination: action.payload.trip_title,
+                    destination: action.payload.location?.region || action.payload.location?.province || action.payload.trip_title,
                     startDate: firstDay?.date || new Date().toISOString().split('T')[0],
                     endDate: lastDay?.date || new Date().toISOString().split('T')[0],
                     vibe: TripVibe.RELAX,
@@ -684,6 +694,50 @@ const dashboardSlice = createSlice({
                 if (action.payload) {
                     state.itinerary = action.payload;
                 }
+            })
+            // Activity Hydration (Fulfilled)
+            .addCase(performHydration.fulfilled, (state, action) => {
+                const { dayId, activityId, hydrated } = action.payload;
+                if (!state.itinerary) return;
+
+                console.log(`✅ [Hydration] Successfully hydrated activity ${activityId}`);
+
+                const dayIndex = state.itinerary.itinerary.findIndex(d => d.id === dayId);
+                if (dayIndex === -1) return;
+
+                const activityIndex = state.itinerary.itinerary[dayIndex].activities.findIndex(a => a.id === activityId);
+                if (activityIndex === -1) return;
+
+                console.log(`🎬 [Hydration] Replacing skeleton ${activityId} with hydrated data`);
+                // Replace skeleton with hydrated activity
+                state.itinerary.itinerary[dayIndex].activities[activityIndex] = {
+                    ...hydrated,
+                    id: activityId, // Keep the original ID so DnD doesn't break
+                    isHydrating: false,
+                    isDraft: false
+                };
+                
+                // Recalculate timeline
+                state.itinerary.itinerary[dayIndex].activities = recalculateDayTimeline(state.itinerary.itinerary[dayIndex].activities);
+                state.isDirty = true;
+            })
+            // Activity Hydration (Rejected)
+            .addCase(performHydration.rejected, (state, action) => {
+                const dayId = action.meta.arg.dayId;
+                const activityId = action.meta.arg.activity.id;
+
+                console.error(`❌ [Hydration] Failed to hydrate activity ${activityId}:`, action.error.message);
+
+                if (!state.itinerary) return;
+                const dayIndex = state.itinerary.itinerary.findIndex(d => d.id === dayId);
+                if (dayIndex === -1) return;
+
+                const activityIndex = state.itinerary.itinerary[dayIndex].activities.findIndex(a => a.id === activityId);
+                if (activityIndex === -1) return;
+
+                // Stop hydrating state and add an error flag
+                state.itinerary.itinerary[dayIndex].activities[activityIndex].isHydrating = false;
+                state.itinerary.itinerary[dayIndex].activities[activityIndex].description = "Click to retry - failed to fetch details.";
             });
     }
 });

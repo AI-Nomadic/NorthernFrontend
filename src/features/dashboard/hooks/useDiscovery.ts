@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { TripState } from '@types';
 import { useAppDispatch, useAppSelector, selectDiscoveryTab, selectDiscoveryItems, selectDiscoveryLoading, selectDiscoveryFilters } from '@state';
-import { setActiveTab, fetchDiscoveryItems, toggleFilter, clearFilters, FILTERS_BY_TAB } from '@state/slices/discoverySlice';
+import { setActiveTab, fetchDiscoveryItems, fetchAISuggestions, toggleFilter, clearFilters, FILTERS_BY_TAB } from '@state/slices/discoverySlice';
 import type { DiscoveryTab } from '@state/slices/discoverySlice';
 
 export const useDiscovery = (tripState: TripState) => {
@@ -10,6 +10,8 @@ export const useDiscovery = (tripState: TripState) => {
     const discoveryItems = useAppSelector(selectDiscoveryItems);
     const discoveryLoading = useAppSelector(selectDiscoveryLoading);
     const activeFilters = useAppSelector(selectDiscoveryFilters);
+    const itinerary = useAppSelector(state => state.dashboard.itinerary);
+    const suggestionSkeletons = useAppSelector(state => state.discovery.suggestionSkeletons);
 
     // -- State Sync Logic --
     // "currentlyActiveParams" serves as the source of truth for what is currently displayed on the canvas.
@@ -28,16 +30,24 @@ export const useDiscovery = (tripState: TripState) => {
     }, [activeFilters, currentlyActiveParams]);
 
     // -- Discovery Logic --
-    // Fetches suggestions based on the current active tab and trip settings.
-    // OPTIMIZATION: Only fetch if we don't have items, or on explicit refresh.
-    // Tab changes are handled client-side via selectors.
+    // For the 'exploration' tab: always fetch AI suggestions (they are session-specific to this trip).
+    // For all other tabs: fetch once from the mock discovery pool if it's empty.
     useEffect(() => {
-        // Initial Fetch if empty
-        if (discoveryItems.length === 0 && !discoveryLoading) {
+        if (activeTab === 'exploration' && !discoveryLoading) {
+            const excludeNames = [
+                ...suggestionSkeletons.map(s => s.title),
+                ...(itinerary?.itinerary.flatMap(day => day.activities.map(a => a.title)) || [])
+            ];
+            dispatch(fetchAISuggestions({ destination: tripState.destination, tags: activeFilters, excludeNames }));
+        }
+    }, [activeTab, tripState.destination]); // Intentionally omit activeFilters — user must click Refresh to re-fetch with filters
+
+    useEffect(() => {
+        if (activeTab !== 'exploration' && discoveryItems.length === 0 && !discoveryLoading) {
             dispatch(fetchDiscoveryItems());
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [dispatch]); // Run once on mount (or if dispatch changes, which is stable)
+    }, [activeTab]);
+
 
     const handleTabChange = (tab: DiscoveryTab) => {
         dispatch(setActiveTab(tab));
@@ -49,8 +59,16 @@ export const useDiscovery = (tripState: TripState) => {
     };
 
     const handleRefresh = () => {
-        // Force re-fetch (simulates getting new AI suggestions)
-        dispatch(fetchDiscoveryItems());
+        if (activeTab === 'exploration') {
+            const excludeNames = [
+                ...suggestionSkeletons.map(s => s.title),
+                ...(itinerary?.itinerary.flatMap(day => day.activities.map(a => a.title)) || [])
+            ];
+            dispatch(fetchAISuggestions({ destination: tripState.destination, tags: activeFilters, excludeNames }));
+            setCurrentlyActiveParams([...activeFilters]); // After successful action, criteria are synced
+        } else {
+            dispatch(fetchDiscoveryItems());
+        }
     };
 
     // available filters for current tab

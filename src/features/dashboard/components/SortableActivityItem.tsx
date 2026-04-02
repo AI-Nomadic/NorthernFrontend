@@ -5,7 +5,7 @@ import { Clock, DollarSign, GripHorizontal } from 'lucide-react';
 import { Activity } from '@types';
 import { DRAG_TYPES } from '../utils';
 import { useAppDispatch } from '@state';
-import { persistItinerary } from '@state/slices/dashboardSlice';
+import { autosaveItinerary } from '@state/slices/dashboardSlice';
 
 interface SortableActivityItemProps {
     activity: Activity;
@@ -50,6 +50,29 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
         transition,
         opacity: isDragging ? 0 : 1,
     };
+
+    // -- Hydrating Mode View --
+    if (activity.isHydrating) {
+        return (
+            <div
+                ref={setNodeRef}
+                style={style}
+                className="bg-white dark:bg-surface-a0 p-4 rounded-xl border border-slate-100 dark:border-surface-a20 shadow-sm mb-2 relative overflow-hidden animate-pulse"
+            >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+                <div className="flex gap-3 relative z-10">
+                    <div className="w-10 h-10 bg-slate-100 dark:bg-surface-a20 rounded-lg shrink-0" />
+                    <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-slate-100 dark:bg-surface-a20 rounded w-3/4" />
+                        <div className="h-3 bg-slate-50 dark:bg-surface-a10 rounded w-1/2" />
+                    </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                   <div className="px-5 py-1 bg-indigo-50/50 dark:bg-indigo-900/20 text-[8px] font-black uppercase text-indigo-500 rounded-full">Hydrating AI Details...</div>
+                </div>
+            </div>
+        );
+    }
 
     // -- Draft Mode View --
     if (activity.isDraft) {

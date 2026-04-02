@@ -1,9 +1,9 @@
-import { Trip, TripGenerationRequest, Suggestion, TravelFormData, ItineraryResponse } from '../types';
+import { Trip, TripGenerationRequest, Suggestion, TravelFormData, ItineraryResponse, ActivitySkeleton, Activity } from '../types';
 
 
 const MOCK_API_BASE = 'http://localhost:3001';
 const REAL_API_BASE = 'http://localhost:8090/api'; // Trip Service gateway entry
-const PLANNER_API_BASE = import.meta.env.VITE_PLANNER_API_URL || 'http://localhost:8090/api/planner';
+const PLANNER_API_BASE = import.meta.env.VITE_PLANNER_API_URL || 'http://localhost:8888/api/planner';
 
 
 /**
@@ -307,4 +307,40 @@ export const auditTrip = async (trip: Trip): Promise<Trip> => {
     const auditedResult = await response.json() as Trip;
     console.log("--- [API] AUDIT RESPONSE RECEIVED ---", auditedResult);
     return auditedResult;
+};
+
+/**
+ * Fetch discovery suggestions (skeletons) from the AI-Planner.
+ */
+export const fetchSidebarSuggestions = async (destination: string, tags: string[], count: number = 6, excludeNames: string[] = []): Promise<ActivitySkeleton[]> => {
+    console.log(`📡 [API] Fetching ${count} Sidebar Suggestions for ${destination} with tags: ${tags.join(', ')}`);
+    const response = await fetch(`${PLANNER_API_BASE}/suggestions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination, tags, count, excludeNames }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch sidebar suggestions');
+    }
+
+    return await response.json() as ActivitySkeleton[];
+};
+
+/**
+ * Hydrate a single activity skeleton with full details.
+ */
+export const hydrateActivity = async (activity: ActivitySkeleton, destination: string, prevCoords?: { lat: number; lng: number }, startTime?: string): Promise<Activity> => {
+    console.log(`💧 [API] Hydrating Activity: ${activity.title} in ${destination}`);
+    const response = await fetch(`${PLANNER_API_BASE}/hydrate-activity`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activity, destination, prevCoords, startTime }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to hydrate activity');
+    }
+
+    return await response.json() as Activity;
 };

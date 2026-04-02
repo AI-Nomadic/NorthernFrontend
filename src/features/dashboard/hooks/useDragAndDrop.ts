@@ -22,17 +22,20 @@ import {
     swapDays,
     setAccommodation,
     autosaveItinerary,
+    performHydration,
 } from '@state/slices/dashboardSlice';
+import { removeSuggestion, fetchReplacementSuggestion } from '@state/slices/discoverySlice';
 import { DRAG_TYPES } from '../utils';
 import { CollabEventType, CollabPayloads } from './useCollab';
 
 export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, payload: CollabPayloads[T]) => void) => {
     const dispatch = useAppDispatch();
     const itinerary = useAppSelector(selectItinerary);
+    const suggestionSkeletons = useAppSelector(state => state.discovery.suggestionSkeletons);
     const { activeId, activeDragType, activeDragItem } = useAppSelector(selectDragState);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
@@ -71,6 +74,7 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
     // Calculates the new position and dispatches the appropriate Redux action
     const handleDragEnd = (event: DragEndEvent) => {
         const { active, over } = event;
+
         // If not dropped on a valid target, cancel the operation
         if (!over || !activeDragType || !itinerary) {
             dispatch(dragCancel());
@@ -205,14 +209,25 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                 targetDayId = over.data.current.dayId;
                 insertionIndex = undefined; // Will add to end
             }
+            // Check if dropped on a day card itself - append to end
+            else if (itinerary.itinerary.find(d => d.id === over.id)) {
+                targetDayId = over.id as string;
+                insertionIndex = undefined;
+            }
 
             if (targetDayId && activeDragItem) {
                 const day = itinerary.itinerary.find(d => d.id === targetDayId);
+                const isSkeleton = active.data.current?.isSkeleton;
+
                 if (day) {
+                    const activityId = isSkeleton 
+                        ? (activeDragItem.id || `act-${Date.now()}`)
+                        : `${activeDragItem.id || activeDragItem.title}-${Date.now()}`;
+
                     const newActivity: Activity = {
-                        id: `${activeDragItem.id || activeDragItem.title}-${Date.now()}`,
+                        id: activityId,
                         title: activeDragItem.title,
-                        description: activeDragItem.description || '',
+                        description: isSkeleton ? 'Hydrating details...' : (activeDragItem.description || ''),
                         location: activeDragItem.location || '',
                         time: day.activities.length > 0
                             ? day.activities[day.activities.length - 1].time
@@ -221,7 +236,10 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                         category: activeDragItem.category || 'Sightseeing',
                         durationMinutes: activeDragItem.durationMinutes || 120,
                         type: 'activity',
-                        status: 'planned'
+                        status: 'planned',
+                        isDraft: false, // Don't show input field
+                        isHydrating: isSkeleton, // Show loading state instead
+                        imageGallery: []
                     };
 
                     dispatch(addActivity({
@@ -229,6 +247,52 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                         activity: newActivity,
                         insertionIndex,
                     }));
+
+                    if (isSkeleton) {
+                        // Corrected: Use location data if available, fallback to title
+                        const cleanDestination = itinerary.location?.region || itinerary.location?.province || itinerary.trip_title;
+
+                        // Logistics Extraction: Find the "Previous Stop" for real-world travel calculation
+                        // Guard: accommodation may not exist on empty/new days
+                        let prevCoords = day.accommodation?.coordinates;
+                        let startTime = "9:00 AM";
+
+                        if (insertionIndex !== undefined && insertionIndex > 0) {
+                            const prevAct = day.activities[insertionIndex - 1];
+                            prevCoords = prevAct?.coordinates ?? prevCoords;
+                            startTime = prevAct?.timeSlot?.end || prevAct?.time || "9:00 AM";
+                        } else if (day.activities.length > 0 && insertionIndex === undefined) {
+                            // Being appended to the end
+                            const lastAct = day.activities[day.activities.length - 1];
+                            prevCoords = lastAct?.coordinates ?? prevCoords;
+                            startTime = lastAct?.timeSlot?.end || lastAct?.time || "9:00 AM";
+                        }
+
+                        console.log(`💧 [DnD] Dispatching Rich Hydration for ${activeDragItem.title} in ${cleanDestination}`);
+                        console.log(`📍 [DnD] Context: PrevCoords: ${JSON.stringify(prevCoords)}, StartTime: ${startTime}`);
+                        
+                        dispatch(performHydration({
+                            dayId: targetDayId,
+                            activity: activeDragItem,
+                            destination: cleanDestination,
+                            prevCoords,
+                            startTime
+                        }));
+
+                        // Compute excludeNames filtering out the one we are actively dropping
+                        const excludeNames = [
+                            ...suggestionSkeletons.filter(s => s.id !== activeDragItem.id).map(s => s.title),
+                            ...(itinerary.itinerary.flatMap(day => day.activities.map(a => a.title)))
+                        ];
+
+                        // Remove from sidebar and fetch replacement
+                        dispatch(removeSuggestion(activeDragItem.id));
+                        dispatch(fetchReplacementSuggestion({
+                            destination: cleanDestination,
+                            tags: [activeDragItem.category],
+                            excludeNames
+                        }));
+                    }
 
                     if (broadcast) {
                         broadcast('ACTIVITY_ADDED', {

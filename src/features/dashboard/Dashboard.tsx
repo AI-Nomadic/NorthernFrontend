@@ -1,5 +1,5 @@
 import React from 'react';
-import { DndContext, rectIntersection, MeasuringStrategy } from '@dnd-kit/core';
+import { DndContext, rectIntersection, pointerWithin, MeasuringStrategy } from '@dnd-kit/core';
 import { useNavigate, useBlocker, useBeforeUnload } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ChevronLeft, PanelLeftOpen } from 'lucide-react';
