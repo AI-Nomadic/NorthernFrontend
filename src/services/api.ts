@@ -1,4 +1,4 @@
-import { Trip, TripGenerationRequest, Suggestion, TravelFormData, ItineraryResponse, ActivitySkeleton, Activity } from '../types';
+import { Trip, TripGenerationRequest, Suggestion, TravelFormData, ItineraryResponse, ActivitySkeleton, Activity, Accommodation } from '../types';
 
 
 const MOCK_API_BASE = 'http://localhost:3001';
@@ -312,12 +312,12 @@ export const auditTrip = async (trip: Trip): Promise<Trip> => {
 /**
  * Fetch discovery suggestions (skeletons) from the AI-Planner.
  */
-export const fetchSidebarSuggestions = async (destination: string, tags: string[], count: number = 6, excludeNames: string[] = []): Promise<ActivitySkeleton[]> => {
-    console.log(`📡 [API] Fetching ${count} Sidebar Suggestions for ${destination} with tags: ${tags.join(', ')}`);
+export const fetchSidebarSuggestions = async (destination: string, tags: string[], type: string, count: number = 6, excludeNames: string[] = []): Promise<ActivitySkeleton[]> => {
+    console.log(`📡 [API] Fetching ${count} ${type} Sidebar Suggestions for ${destination} with tags: ${tags.join(', ')}`);
     const response = await fetch(`${PLANNER_API_BASE}/suggestions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ destination, tags, count, excludeNames }),
+        body: JSON.stringify({ destination, tags, type, count, excludeNames }),
     });
 
     if (!response.ok) {
@@ -343,4 +343,22 @@ export const hydrateActivity = async (activity: ActivitySkeleton, destination: s
     }
 
     return await response.json() as Activity;
+};
+
+/**
+ * Hydrate a single lodging skeleton with full accommodation details.
+ */
+export const hydrateAccommodation = async (accommodation: ActivitySkeleton, destination: string): Promise<Accommodation> => {
+    console.log(`💧 [API] Hydrating Accommodation: ${accommodation.title} in ${destination}`);
+    const response = await fetch(`${PLANNER_API_BASE}/hydrate-accommodation`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accommodation, destination }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to hydrate accommodation');
+    }
+
+    return await response.json() as Accommodation;
 };

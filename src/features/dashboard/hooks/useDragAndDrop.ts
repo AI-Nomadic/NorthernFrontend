@@ -11,7 +11,7 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
 import { Activity } from '@types';
-import { useAppDispatch, useAppSelector, selectItinerary, selectDragState } from '@state';
+import { useAppDispatch, useAppSelector, selectItinerary, selectDragState, selectDiscoveryTab } from '@state';
 import {
     dragStart,
     dragCancel,
@@ -23,6 +23,7 @@ import {
     setAccommodation,
     autosaveItinerary,
     performHydration,
+    performAccommodationHydration,
 } from '@state/slices/dashboardSlice';
 import { removeSuggestion, fetchReplacementSuggestion } from '@state/slices/discoverySlice';
 import { DRAG_TYPES } from '../utils';
@@ -31,7 +32,10 @@ import { CollabEventType, CollabPayloads } from './useCollab';
 export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, payload: CollabPayloads[T]) => void) => {
     const dispatch = useAppDispatch();
     const itinerary = useAppSelector(selectItinerary);
-    const suggestionSkeletons = useAppSelector(state => state.discovery.suggestionSkeletons);
+    const activitySkeletons = useAppSelector(state => state.discovery.activitySkeletons);
+    const culinarySkeletons = useAppSelector(state => state.discovery.culinarySkeletons);
+    const lodgingSkeletons = useAppSelector(state => state.discovery.lodgingSkeletons);
+    const activeTab = useAppSelector(selectDiscoveryTab);
     const { activeId, activeDragType, activeDragItem } = useAppSelector(selectDragState);
 
     const sensors = useSensors(
@@ -280,18 +284,24 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                         }));
 
                         // Compute excludeNames filtering out the one we are actively dropping
+                        const currentTabSkeletons = activeTab === 'culinary' ? culinarySkeletons : activitySkeletons;
                         const excludeNames = [
-                            ...suggestionSkeletons.filter(s => s.id !== activeDragItem.id).map(s => s.title),
-                            ...(itinerary.itinerary.flatMap(day => day.activities.map(a => a.title)))
+                            ...currentTabSkeletons.filter(s => s.id !== activeDragItem.id).map(s => s.title),
+                            ...(itinerary.itinerary.flatMap(day => day.activities.map(a => a.title))),
+                            activeDragItem.title // explicitly add this, since state hasn't updated in closure
                         ];
 
                         // Remove from sidebar and fetch replacement
-                        dispatch(removeSuggestion(activeDragItem.id));
-                        dispatch(fetchReplacementSuggestion({
-                            destination: cleanDestination,
-                            tags: [activeDragItem.category],
-                            excludeNames
-                        }));
+                        // Only applies to AI tabs
+                        if (activeTab === 'exploration' || activeTab === 'culinary') {
+                            dispatch(removeSuggestion({ id: activeDragItem.id, type: activeTab }));
+                            dispatch(fetchReplacementSuggestion({
+                                destination: cleanDestination,
+                                tags: [activeDragItem.category],
+                                type: activeTab,
+                                excludeNames
+                            }));
+                        }
                     }
 
                     if (broadcast) {
@@ -301,7 +311,12 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                             insertionIndex,
                         });
                     }
-                    dispatch(autosaveItinerary());
+                    // Only autosave immediately if it's NOT a skeleton.
+                    // If it IS a skeleton, performHydration is running and will autosave upon completion.
+                    // This prevents Java backend from stripping the UUID before hydration finds it.
+                    if (!isSkeleton) {
+                        dispatch(autosaveItinerary());
+                    }
                 }
             } else {
                 dispatch(dragCancel());
@@ -318,18 +333,62 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
             }
 
             if (targetDayId && activeDragItem) {
+                const isSkeleton = active.data.current?.isSkeleton;
+                
+                const cleanDestination = itinerary.location?.region || itinerary.location?.province || itinerary.trip_title;
+                const accommodationId = isSkeleton 
+                    ? (activeDragItem.id || `act-${Date.now()}`)
+                    : `${activeDragItem.id || activeDragItem.title}-${Date.now()}`;
+
+                const newAccommodation = {
+                    ...activeDragItem,
+                    id: accommodationId,
+                    hotelName: activeDragItem.title || activeDragItem.hotelName, // Mapping title to hotelName for skeletons
+                    isHydrating: isSkeleton
+                };
+
                 dispatch(setAccommodation({
                     dayId: targetDayId,
-                    accommodation: activeDragItem,
+                    accommodation: newAccommodation,
                 }));
+
+                if (isSkeleton) {
+                    console.log(`💧 [DnD] Dispatching Rich Hydration for Hotel ${activeDragItem.title}`);
+                    dispatch(performAccommodationHydration({
+                        dayId: targetDayId,
+                        accommodation: activeDragItem,
+                        destination: cleanDestination
+                    }));
+
+                    const excludeNames = [
+                        ...lodgingSkeletons.filter(s => s.id !== activeDragItem.id).map(s => s.title),
+                        ...(itinerary.itinerary.flatMap(day => day.activities.map(a => a.title))),
+                        ...(itinerary.itinerary.map(day => day.accommodation?.hotelName).filter(Boolean) as string[]),
+                        activeDragItem.title
+                    ];
+
+                    if (activeTab === 'stay') {
+                        dispatch(removeSuggestion({ id: activeDragItem.id, type: 'stay' }));
+                        dispatch(fetchReplacementSuggestion({
+                            destination: cleanDestination,
+                            tags: [activeDragItem.category || 'Hotel'],
+                            type: 'stay',
+                            excludeNames
+                        }));
+                    }
+                }
 
                 if (broadcast) {
                     broadcast('HOTEL_UPDATED', {
                         dayId: targetDayId,
-                        newHotel: activeDragItem
+                        newHotel: newAccommodation
                     });
                 }
-                dispatch(autosaveItinerary());
+                
+                // Only autosave immediately if it's NOT a skeleton
+                if (!isSkeleton) {
+                    dispatch(autosaveItinerary());
+                }
             } else {
                 dispatch(dragCancel());
             }

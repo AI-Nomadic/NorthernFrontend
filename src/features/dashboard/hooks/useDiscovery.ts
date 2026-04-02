@@ -11,7 +11,9 @@ export const useDiscovery = (tripState: TripState) => {
     const discoveryLoading = useAppSelector(selectDiscoveryLoading);
     const activeFilters = useAppSelector(selectDiscoveryFilters);
     const itinerary = useAppSelector(state => state.dashboard.itinerary);
-    const suggestionSkeletons = useAppSelector(state => state.discovery.suggestionSkeletons);
+    const activitySkeletons = useAppSelector(state => state.discovery.activitySkeletons);
+    const culinarySkeletons = useAppSelector(state => state.discovery.culinarySkeletons);
+    const lodgingSkeletons = useAppSelector(state => state.discovery.lodgingSkeletons);
 
     // -- State Sync Logic --
     // "currentlyActiveParams" serves as the source of truth for what is currently displayed on the canvas.
@@ -30,20 +32,28 @@ export const useDiscovery = (tripState: TripState) => {
     }, [activeFilters, currentlyActiveParams]);
 
     // -- Discovery Logic --
-    // For the 'exploration' tab: always fetch AI suggestions (they are session-specific to this trip).
+    // For the AI tabs: always fetch AI suggestions (they are session-specific to this trip).
     // For all other tabs: fetch once from the mock discovery pool if it's empty.
     useEffect(() => {
-        if (activeTab === 'exploration' && !discoveryLoading) {
+        if ((activeTab === 'exploration' || activeTab === 'culinary' || activeTab === 'stay') && !discoveryLoading) {
+            let currentTabSkeletons = activitySkeletons;
+            if (activeTab === 'culinary') currentTabSkeletons = culinarySkeletons;
+            if (activeTab === 'stay') currentTabSkeletons = lodgingSkeletons;
+
+            // Prevent initial refetching if we already have items loaded for THIS tab
+            if (currentTabSkeletons.length > 0) return;
+
             const excludeNames = [
-                ...suggestionSkeletons.map(s => s.title),
-                ...(itinerary?.itinerary.flatMap(day => day.activities.map(a => a.title)) || [])
+                ...currentTabSkeletons.map(s => s.title),
+                ...(itinerary?.itinerary.flatMap(day => day.activities.map(a => a.title)) || []),
+                ...(itinerary?.itinerary.map(day => day.accommodation?.hotelName).filter(Boolean) as string[] || [])
             ];
-            dispatch(fetchAISuggestions({ destination: tripState.destination, tags: activeFilters, excludeNames }));
+            dispatch(fetchAISuggestions({ destination: tripState.destination, tags: activeFilters, type: activeTab, excludeNames }));
         }
     }, [activeTab, tripState.destination]); // Intentionally omit activeFilters — user must click Refresh to re-fetch with filters
 
     useEffect(() => {
-        if (activeTab !== 'exploration' && discoveryItems.length === 0 && !discoveryLoading) {
+        if (activeTab !== 'exploration' && activeTab !== 'culinary' && activeTab !== 'stay' && discoveryItems.length === 0 && !discoveryLoading) {
             dispatch(fetchDiscoveryItems());
         }
     }, [activeTab]);
@@ -59,12 +69,17 @@ export const useDiscovery = (tripState: TripState) => {
     };
 
     const handleRefresh = () => {
-        if (activeTab === 'exploration') {
+        if (activeTab === 'exploration' || activeTab === 'culinary' || activeTab === 'stay') {
+            let currentTabSkeletons = activitySkeletons;
+            if (activeTab === 'culinary') currentTabSkeletons = culinarySkeletons;
+            if (activeTab === 'stay') currentTabSkeletons = lodgingSkeletons;
+
             const excludeNames = [
-                ...suggestionSkeletons.map(s => s.title),
-                ...(itinerary?.itinerary.flatMap(day => day.activities.map(a => a.title)) || [])
+                ...currentTabSkeletons.map(s => s.title),
+                ...(itinerary?.itinerary.flatMap(day => day.activities.map(a => a.title)) || []),
+                ...(itinerary?.itinerary.map(day => day.accommodation?.hotelName).filter(Boolean) as string[] || [])
             ];
-            dispatch(fetchAISuggestions({ destination: tripState.destination, tags: activeFilters, excludeNames }));
+            dispatch(fetchAISuggestions({ destination: tripState.destination, tags: activeFilters, type: activeTab, excludeNames }));
             setCurrentlyActiveParams([...activeFilters]); // After successful action, criteria are synced
         } else {
             dispatch(fetchDiscoveryItems());

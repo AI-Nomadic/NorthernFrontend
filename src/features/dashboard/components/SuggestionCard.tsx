@@ -7,13 +7,14 @@ import { DRAG_TYPES } from '../utils';
 
 interface SuggestionCardProps {
     suggestion: ActivitySkeleton;
+    type?: 'activity' | 'accommodation';
 }
 
-export const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestion }) => {
+export const SuggestionCard: React.FC<SuggestionCardProps> = ({ suggestion, type = 'activity' }) => {
     const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
         id: `suggestion-${suggestion.id}`,
         data: {
-            type: DRAG_TYPES.SIDEBAR_ACTIVITY,
+            type: type === 'accommodation' ? DRAG_TYPES.SIDEBAR_ACCOMMODATION : DRAG_TYPES.SIDEBAR_ACTIVITY,
             item: suggestion,
             isSkeleton: true
         }

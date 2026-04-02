@@ -23,7 +23,9 @@ export const FILTERS_BY_TAB: Record<string, string[]> = {
 interface DiscoveryState {
     activeTab: DiscoveryTab;
     allItems: any[]; // Store ALL fetched suggestions here
-    suggestionSkeletons: ActivitySkeleton[]; 
+    activitySkeletons: ActivitySkeleton[]; 
+    culinarySkeletons: ActivitySkeleton[]; 
+    lodgingSkeletons: ActivitySkeleton[]; 
     activeFilters: string[];
     loading: boolean;
     error: string | null;
@@ -32,7 +34,9 @@ interface DiscoveryState {
 const initialState: DiscoveryState = {
     activeTab: 'exploration',
     allItems: [],
-    suggestionSkeletons: [],
+    activitySkeletons: [],
+    culinarySkeletons: [],
+    lodgingSkeletons: [],
     activeFilters: [],
     loading: false,
     error: null,
@@ -50,15 +54,17 @@ export const fetchDiscoveryItems = createAsyncThunk(
 
 export const fetchAISuggestions = createAsyncThunk(
     'discovery/fetchAISuggestions',
-    async ({ destination, tags, excludeNames = [] }: { destination: string, tags: string[], excludeNames?: string[] }) => {
-        return await fetchSidebarSuggestions(destination, tags, 6, excludeNames);
+    async ({ destination, tags, type = 'exploration', excludeNames = [] }: { destination: string, tags: string[], type?: 'exploration'|'culinary'|'stay', excludeNames?: string[] }) => {
+        const suggestions = await fetchSidebarSuggestions(destination, tags, type, 6, excludeNames);
+        return { type, suggestions };
     }
 );
 
 export const fetchReplacementSuggestion = createAsyncThunk(
     'discovery/fetchReplacementSuggestion',
-    async ({ destination, tags, excludeNames = [] }: { destination: string, tags: string[], excludeNames?: string[] }) => {
-        return await fetchSidebarSuggestions(destination, tags, 1, excludeNames);
+    async ({ destination, tags, type = 'exploration', excludeNames = [] }: { destination: string, tags: string[], type?: 'exploration'|'culinary'|'stay', excludeNames?: string[] }) => {
+        const suggestions = await fetchSidebarSuggestions(destination, tags, type, 1, excludeNames);
+        return { type, suggestions };
     }
 );
 
@@ -81,8 +87,14 @@ const discoverySlice = createSlice({
         clearFilters: (state) => {
             state.activeFilters = [];
         },
-        removeSuggestion: (state, action: PayloadAction<string>) => {
-            state.suggestionSkeletons = state.suggestionSkeletons.filter(s => s.id !== action.payload);
+        removeSuggestion: (state, action: PayloadAction<{ id: string, type: 'exploration' | 'culinary' | 'stay' }>) => {
+            if (action.payload.type === 'exploration') {
+                state.activitySkeletons = state.activitySkeletons.filter(s => s.id !== action.payload.id);
+            } else if (action.payload.type === 'culinary') {
+                state.culinarySkeletons = state.culinarySkeletons.filter(s => s.id !== action.payload.id);
+            } else {
+                state.lodgingSkeletons = state.lodgingSkeletons.filter(s => s.id !== action.payload.id);
+            }
         },
     },
     extraReducers: (builder) => {
@@ -106,7 +118,13 @@ const discoverySlice = createSlice({
             })
             .addCase(fetchAISuggestions.fulfilled, (state, action) => {
                 state.loading = false;
-                state.suggestionSkeletons = action.payload;
+                if (action.payload.type === 'exploration') {
+                    state.activitySkeletons = action.payload.suggestions;
+                } else if (action.payload.type === 'culinary') {
+                    state.culinarySkeletons = action.payload.suggestions;
+                } else if (action.payload.type === 'stay') {
+                    state.lodgingSkeletons = action.payload.suggestions;
+                }
             })
             .addCase(fetchAISuggestions.rejected, (state, action) => {
                 state.loading = false;
@@ -114,8 +132,14 @@ const discoverySlice = createSlice({
             })
             // Replacement AI Suggestion
             .addCase(fetchReplacementSuggestion.fulfilled, (state, action) => {
-                // Append the newly fetched suggestion(s) to the list
-                state.suggestionSkeletons = [...state.suggestionSkeletons, ...action.payload];
+                // Append the newly fetched suggestion(s) to the appropriate list
+                if (action.payload.type === 'exploration') {
+                    state.activitySkeletons = [...state.activitySkeletons, ...action.payload.suggestions];
+                } else if (action.payload.type === 'culinary') {
+                    state.culinarySkeletons = [...state.culinarySkeletons, ...action.payload.suggestions];
+                } else if (action.payload.type === 'stay') {
+                    state.lodgingSkeletons = [...state.lodgingSkeletons, ...action.payload.suggestions];
+                }
             });
     },
 });
@@ -132,14 +156,22 @@ export const selectDiscoveryLoading = (state: RootState) => state.discovery.load
 export const selectDiscoveryItems = createSelector(
     [
         (state: RootState) => state.discovery.allItems, 
-        (state: RootState) => state.discovery.suggestionSkeletons,
+        (state: RootState) => state.discovery.activitySkeletons,
+        (state: RootState) => state.discovery.culinarySkeletons,
+        (state: RootState) => state.discovery.lodgingSkeletons,
         (state: RootState) => state.discovery.activeTab, 
         (state: RootState) => state.discovery.activeFilters
     ],
-    (allItems, skeletons, tab, filters) => {
-        // If we have AI skeletons and we are on Exploration tab, prioritize them
-        if (tab === 'exploration' && skeletons.length > 0) {
-            return skeletons;
+    (allItems, activeSkeletons, culinarySkeletons, lodgingSkeletons, tab, filters) => {
+        // If we have AI skeletons and we are on an AI tab, prioritize them
+        if (tab === 'exploration' && activeSkeletons.length > 0) {
+            return activeSkeletons;
+        }
+        if (tab === 'culinary' && culinarySkeletons.length > 0) {
+            return culinarySkeletons;
+        }
+        if (tab === 'stay' && lodgingSkeletons.length > 0) {
+            return lodgingSkeletons;
         }
 
         const allowedCategories = TAB_CATEGORY_MAP[tab] || [];

@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { Trip, DayPlan, Activity, Accommodation, TripState, TripVibe, TravelFormData } from '@types';
 import { recalculateDayTimeline } from '@features/dashboard/utils';
-import { getTrip, getAllTrips, updateTrip, togglePublishTrip, hydrateActivity as hydrateActivityAPI } from '@services/api';
+import { getTrip, getAllTrips, updateTrip, togglePublishTrip, hydrateActivity as hydrateActivityAPI, hydrateAccommodation as hydrateAccommodationAPI } from '@services/api';
 import { RootState } from '../store';
 
 // -- Async Thunks --
@@ -113,9 +113,28 @@ export const generateAITrip = createAsyncThunk(
 
 export const performHydration = createAsyncThunk(
     'dashboard/hydrateActivity',
-    async ({ dayId, activity, destination, prevCoords, startTime }: { dayId: string; activity: any; destination: string; prevCoords?: { lat: number; lng: number }; startTime?: string }) => {
+    async ({ dayId, activity, destination, prevCoords, startTime }: { dayId: string; activity: any; destination: string; prevCoords?: { lat: number; lng: number }; startTime?: string }, { dispatch }) => {
         const hydrated = await hydrateActivityAPI(activity, destination, prevCoords, startTime);
+        
+        // Wait a tick for the fulfilled extraReducer to update the Redux state with hydrated data
+        setTimeout(() => {
+            dispatch(autosaveItinerary());
+        }, 100);
+
         return { dayId, activityId: activity.id, hydrated };
+    }
+);
+
+export const performAccommodationHydration = createAsyncThunk(
+    'dashboard/hydrateAccommodation',
+    async ({ dayId, accommodation, destination }: { dayId: string; accommodation: any; destination: string }, { dispatch }) => {
+        const hydrated = await hydrateAccommodationAPI(accommodation, destination);
+        
+        setTimeout(() => {
+            dispatch(autosaveItinerary());
+        }, 100);
+
+        return { dayId, accommodationId: accommodation.id, hydrated };
     }
 );
 
@@ -738,6 +757,26 @@ const dashboardSlice = createSlice({
                 // Stop hydrating state and add an error flag
                 state.itinerary.itinerary[dayIndex].activities[activityIndex].isHydrating = false;
                 state.itinerary.itinerary[dayIndex].activities[activityIndex].description = "Click to retry - failed to fetch details.";
+            })
+            // Accommodation Hydration (Fulfilled)
+            .addCase(performAccommodationHydration.fulfilled, (state, action) => {
+                const { dayId, accommodationId, hydrated } = action.payload;
+                if (!state.itinerary) return;
+
+                console.log(`✅ [Hydration] Successfully hydrated accommodation ${accommodationId}`);
+
+                const dayIndex = state.itinerary.itinerary.findIndex(d => d.id === dayId);
+                if (dayIndex === -1) return;
+
+                console.log(`🎬 [Hydration] Replacing skeleton ${accommodationId} with hydrated data`);
+                // Replace skeleton with hydrated accommodation
+                state.itinerary.itinerary[dayIndex].accommodation = {
+                    ...hydrated,
+                    id: accommodationId, // Keep the original ID so UI doesn't break
+                    bookingStatus: 'draft'
+                };
+                
+                state.isDirty = true;
             });
     }
 });
