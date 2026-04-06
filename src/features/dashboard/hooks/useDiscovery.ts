@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { TripState } from '@types';
 import { useAppDispatch, useAppSelector, selectDiscoveryTab, selectDiscoveryItems, selectDiscoveryLoading, selectDiscoveryFilters } from '@state';
-import { setActiveTab, fetchDiscoveryItems, fetchAISuggestions, toggleFilter, clearFilters, FILTERS_BY_TAB } from '@state/slices/discoverySlice';
+import { setActiveTab, fetchDiscoveryItems, fetchAISuggestions, fetchEvents, toggleFilter, clearFilters, FILTERS_BY_TAB } from '@state/slices/discoverySlice';
 import type { DiscoveryTab } from '@state/slices/discoverySlice';
 
 export const useDiscovery = (tripState: TripState) => {
@@ -14,6 +14,7 @@ export const useDiscovery = (tripState: TripState) => {
     const activitySkeletons = useAppSelector(state => state.discovery.activitySkeletons);
     const culinarySkeletons = useAppSelector(state => state.discovery.culinarySkeletons);
     const lodgingSkeletons = useAppSelector(state => state.discovery.lodgingSkeletons);
+    const eventSkeletons = useAppSelector(state => state.discovery.eventSkeletons);
 
     // -- State Sync Logic --
     // "currentlyActiveParams" serves as the source of truth for what is currently displayed on the canvas.
@@ -53,10 +54,22 @@ export const useDiscovery = (tripState: TripState) => {
     }, [activeTab, tripState.destination]); // Intentionally omit activeFilters — user must click Refresh to re-fetch with filters
 
     useEffect(() => {
-        if (activeTab !== 'exploration' && activeTab !== 'culinary' && activeTab !== 'stay' && discoveryItems.length === 0 && !discoveryLoading) {
+        if (activeTab !== 'exploration' && activeTab !== 'culinary' && activeTab !== 'stay' && activeTab !== 'events' && discoveryItems.length === 0 && !discoveryLoading) {
             dispatch(fetchDiscoveryItems());
         }
     }, [activeTab]);
+
+    // -- PredictHQ Events --
+    useEffect(() => {
+        if (activeTab === 'events' && eventSkeletons.length === 0 && !discoveryLoading) {
+            dispatch(fetchEvents({
+                destination: tripState.destination,
+                tags: activeFilters,
+                startDate: tripState.startDate,
+                endDate: tripState.endDate
+            }));
+        }
+    }, [activeTab, tripState.destination, tripState.startDate, tripState.endDate]);
 
 
     const handleTabChange = (tab: DiscoveryTab) => {
@@ -81,6 +94,14 @@ export const useDiscovery = (tripState: TripState) => {
             ];
             dispatch(fetchAISuggestions({ destination: tripState.destination, tags: activeFilters, type: activeTab, excludeNames }));
             setCurrentlyActiveParams([...activeFilters]); // After successful action, criteria are synced
+        } else if (activeTab === 'events') {
+            dispatch(fetchEvents({
+                destination: tripState.destination,
+                tags: activeFilters,
+                startDate: tripState.startDate,
+                endDate: tripState.endDate
+            }));
+            setCurrentlyActiveParams([...activeFilters]);
         } else {
             dispatch(fetchDiscoveryItems());
         }

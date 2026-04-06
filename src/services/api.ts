@@ -328,6 +328,24 @@ export const fetchSidebarSuggestions = async (destination: string, tags: string[
 };
 
 /**
+ * Fetch real-world events from PredictHQ via the AI-Planner.
+ */
+export const fetchEventsSuggestions = async (destination: string, tags: string[], startDate?: string, endDate?: string): Promise<ActivitySkeleton[]> => {
+    console.log(`📡 [API] Fetching PredictHQ Events for ${destination}`);
+    const response = await fetch(`${PLANNER_API_BASE}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination, tags, startDate, endDate }),
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to fetch event suggestions');
+    }
+
+    return await response.json() as ActivitySkeleton[];
+};
+
+/**
  * Hydrate a single activity skeleton with full details.
  */
 export const hydrateActivity = async (activity: ActivitySkeleton, destination: string, prevCoords?: { lat: number; lng: number }, startTime?: string): Promise<Activity> => {

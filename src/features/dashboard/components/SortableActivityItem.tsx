@@ -128,11 +128,24 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
                     </div>
                 </div>
                 <div className="flex-1 pr-6">
-                    <h4 className="text-sm font-semibold text-slate-800 dark:text-white leading-tight mb-1">{activity.title}</h4>
+                    <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-sm font-semibold text-slate-800 dark:text-white leading-tight">{activity.title}</h4>
+                        {activity.isEvent && (
+                            <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-[8px] font-black uppercase text-indigo-600 dark:text-indigo-400 rounded-md border border-indigo-200 dark:border-indigo-800/30 animate-pulse">
+                                Event
+                            </span>
+                        )}
+                    </div>
                     <p className="text-xs text-slate-500 dark:text-slate-200 line-clamp-2 mb-2">{activity.description}</p>
                     <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-300 uppercase font-bold tracking-wider">
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {activity.durationMinutes}m</span>
-                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><DollarSign className="w-3 h-3" /> {activity.cost_estimate}</span>
+                        <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" /> 
+                            {activity.isEvent ? 'Fixed Time' : `${activity.durationMinutes}m`}
+                        </span>
+                        <span className={`flex items-center gap-1 ${activity.price_note ? 'text-indigo-500 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                            <DollarSign className="w-3 h-3" /> 
+                            {activity.price_note || `${activity.cost_estimate} CAD`}
+                        </span>
                     </div>
                 </div>
             </div>

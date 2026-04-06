@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { getSuggestions, fetchSidebarSuggestions } from '@services/api';
+import { getSuggestions, fetchSidebarSuggestions, fetchEventsSuggestions } from '@services/api';
 import { ActivitySkeleton } from '@types';
 import { RootState } from '../store';
 
@@ -10,14 +10,14 @@ const TAB_CATEGORY_MAP: Record<string, string[]> = {
     culinary: ['Food', 'Drink'],
     exploration: ['Adventure', 'Sightseeing', 'Relaxation'],
     stay: ['Accommodation', 'Hotel'],
-    events: ['Event', 'Festival']
+    events: ['Event', 'Festival', 'Concert', 'Performance', 'Conference', 'Expo', 'Sports']
 };
 
 export const FILTERS_BY_TAB: Record<string, string[]> = {
     culinary: ['Local Favorites', 'Fine Dining', 'Budget', 'Romantic', 'Spicy', 'Casual'],
     exploration: ['Nature', 'History', 'Free', 'Shopping', 'Architecture', 'Walkable'],
     stay: ['Luxury', 'Boutique', 'Central', 'Trendy', 'Spa'],
-    events: ['Music', 'Live', 'Culture', 'Social']
+    events: ['Music', 'Sports', 'Arts & Theatre', 'Film', 'Miscellaneous']
 };
 
 interface DiscoveryState {
@@ -26,6 +26,7 @@ interface DiscoveryState {
     activitySkeletons: ActivitySkeleton[]; 
     culinarySkeletons: ActivitySkeleton[]; 
     lodgingSkeletons: ActivitySkeleton[]; 
+    eventSkeletons: ActivitySkeleton[];
     activeFilters: string[];
     loading: boolean;
     error: string | null;
@@ -37,6 +38,7 @@ const initialState: DiscoveryState = {
     activitySkeletons: [],
     culinarySkeletons: [],
     lodgingSkeletons: [],
+    eventSkeletons: [],
     activeFilters: [],
     loading: false,
     error: null,
@@ -65,6 +67,14 @@ export const fetchReplacementSuggestion = createAsyncThunk(
     async ({ destination, tags, type = 'exploration', excludeNames = [] }: { destination: string, tags: string[], type?: 'exploration'|'culinary'|'stay', excludeNames?: string[] }) => {
         const suggestions = await fetchSidebarSuggestions(destination, tags, type, 1, excludeNames);
         return { type, suggestions };
+    }
+);
+
+export const fetchEvents = createAsyncThunk(
+    'discovery/fetchEvents',
+    async ({ destination, tags, startDate, endDate }: { destination: string, tags: string[], startDate?: string, endDate?: string }) => {
+        const suggestions = await fetchEventsSuggestions(destination, tags, startDate, endDate);
+        return suggestions;
     }
 );
 
@@ -140,6 +150,19 @@ const discoverySlice = createSlice({
                 } else if (action.payload.type === 'stay') {
                     state.lodgingSkeletons = [...state.lodgingSkeletons, ...action.payload.suggestions];
                 }
+            })
+            // PredictHQ Events
+            .addCase(fetchEvents.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchEvents.fulfilled, (state, action) => {
+                state.loading = false;
+                state.eventSkeletons = action.payload;
+            })
+            .addCase(fetchEvents.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message || 'Failed to fetch events';
             });
     },
 });
@@ -159,10 +182,11 @@ export const selectDiscoveryItems = createSelector(
         (state: RootState) => state.discovery.activitySkeletons,
         (state: RootState) => state.discovery.culinarySkeletons,
         (state: RootState) => state.discovery.lodgingSkeletons,
+        (state: RootState) => state.discovery.eventSkeletons,
         (state: RootState) => state.discovery.activeTab, 
         (state: RootState) => state.discovery.activeFilters
     ],
-    (allItems, activeSkeletons, culinarySkeletons, lodgingSkeletons, tab, filters) => {
+    (allItems, activeSkeletons, culinarySkeletons, lodgingSkeletons, eventSkeletons, tab, filters) => {
         // If we have AI skeletons and we are on an AI tab, prioritize them
         if (tab === 'exploration' && activeSkeletons.length > 0) {
             return activeSkeletons;
@@ -172,6 +196,9 @@ export const selectDiscoveryItems = createSelector(
         }
         if (tab === 'stay' && lodgingSkeletons.length > 0) {
             return lodgingSkeletons;
+        }
+        if (tab === 'events' && eventSkeletons.length > 0) {
+            return eventSkeletons;
         }
 
         const allowedCategories = TAB_CATEGORY_MAP[tab] || [];

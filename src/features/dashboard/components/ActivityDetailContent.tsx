@@ -143,8 +143,14 @@ export const ActivityDetailContent: React.FC<ActivityDetailContentProps> = ({ ac
                         <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duration</span>
-                        <span className="font-bold text-slate-700 dark:text-slate-200">{activity.durationMinutes} mins</span>
+                        <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {activity.isEvent ? 'Event Time' : 'Duration'}
+                        </span>
+                        <span className="font-bold text-slate-700 dark:text-slate-200">
+                            {activity.isEvent && activity.time 
+                                ? activity.time
+                                : `${activity.durationMinutes} mins`}
+                        </span>
                     </div>
                 </div>
                 <div className="bg-slate-50 dark:bg-surface-a10 p-4 rounded-2xl flex items-center gap-3 border border-slate-100 dark:border-surface-a20 transition-colors">
@@ -153,12 +159,39 @@ export const ActivityDetailContent: React.FC<ActivityDetailContentProps> = ({ ac
                     </div>
                     <div>
                         <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Est. Cost</span>
-                        <span className="font-bold text-slate-700 dark:text-slate-200">${activity.cost_estimate || 0} CAD</span>
+                        <span className="font-bold text-slate-700 dark:text-slate-200">
+                            {activity.price_note || `$${activity.cost_estimate || 0} CAD`}
+                        </span>
                     </div>
                 </div>
             </div>
 
+            {activity.isEvent && activity.eventDate && (
+                <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl flex items-center gap-3 border border-indigo-100 dark:border-indigo-800/30">
+                    <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/40">
+                        <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div>
+                        <span className="block text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Event Date</span>
+                        <span className="font-bold text-indigo-700 dark:text-indigo-300">
+                            {new Date(activity.eventDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        </span>
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col gap-3 pt-6 border-t border-slate-100 dark:border-surface-a20">
+                {activity.bookingUrl && (
+                    <a
+                        href={activity.bookingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-indigo-200 dark:shadow-none"
+                    >
+                        <ChevronRight className="w-5 h-5" /> Book on Ticketmaster
+                    </a>
+                )}
+
                 <a
                     href={mapLink}
                     target="_blank"

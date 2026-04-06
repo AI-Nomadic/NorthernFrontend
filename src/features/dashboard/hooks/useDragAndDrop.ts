@@ -233,16 +233,19 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                         title: activeDragItem.title,
                         description: isSkeleton ? 'Hydrating details...' : (activeDragItem.description || ''),
                         location: activeDragItem.location || '',
-                        time: day.activities.length > 0
-                            ? day.activities[day.activities.length - 1].time
-                            : '09:00',
+                        isEvent: activeDragItem.isEvent, // PRESERVE EVENT FLAG
+                        time: activeDragItem.isEvent && activeDragItem.time 
+                            ? activeDragItem.time 
+                            : (day.activities.length > 0
+                                ? day.activities[day.activities.length - 1].time
+                                : '09:00'),
                         cost_estimate: activeDragItem.cost_estimate || 0,
                         category: activeDragItem.category || 'Sightseeing',
                         durationMinutes: activeDragItem.durationMinutes || 120,
                         type: 'activity',
                         status: 'planned',
-                        isDraft: false, // Don't show input field
-                        isHydrating: isSkeleton, // Show loading state instead
+                        isDraft: false, 
+                        isHydrating: isSkeleton, 
                         imageGallery: []
                     };
 
@@ -280,7 +283,9 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                             activity: activeDragItem,
                             destination: cleanDestination,
                             prevCoords,
-                            startTime
+                            startTime: activeDragItem.isEvent && activeDragItem.time 
+                                ? activeDragItem.time 
+                                : startTime
                         }));
 
                         // Compute excludeNames filtering out the one we are actively dropping
@@ -359,23 +364,24 @@ export const useDragAndDrop = (broadcast?: <T extends CollabEventType>(type: T, 
                         accommodation: activeDragItem,
                         destination: cleanDestination
                     }));
+                }
 
+                // Pop and replenish the sidebar for the stay tab
+                if (activeTab === 'stay') {
                     const excludeNames = [
-                        ...lodgingSkeletons.filter(s => s.id !== activeDragItem.id).map(s => s.title),
+                        ...lodgingSkeletons.filter(s => s.id !== activeDragItem.id).map(s => (s as any).title || (s as any).hotelName),
                         ...(itinerary.itinerary.flatMap(day => day.activities.map(a => a.title))),
                         ...(itinerary.itinerary.map(day => day.accommodation?.hotelName).filter(Boolean) as string[]),
-                        activeDragItem.title
+                        activeDragItem.title || activeDragItem.hotelName
                     ];
 
-                    if (activeTab === 'stay') {
-                        dispatch(removeSuggestion({ id: activeDragItem.id, type: 'stay' }));
-                        dispatch(fetchReplacementSuggestion({
-                            destination: cleanDestination,
-                            tags: [activeDragItem.category || 'Hotel'],
-                            type: 'stay',
-                            excludeNames
-                        }));
-                    }
+                    dispatch(removeSuggestion({ id: activeDragItem.id, type: 'stay' }));
+                    dispatch(fetchReplacementSuggestion({
+                        destination: cleanDestination,
+                        tags: [activeDragItem.category || 'Hotel'],
+                        type: 'stay',
+                        excludeNames
+                    }));
                 }
 
                 if (broadcast) {

@@ -33,7 +33,26 @@ export const recalculateDayTimeline = (activities: Activity[]): Activity[] => {
             }
         }
 
-        currentMs += travelMinutes * 60000;
+        // --- FIXED TIME LOGIC ---
+        // If this is a Ticketmaster event with a fixed time, we snap the timeline to it
+        if (activity.isEvent && activity.time) {
+            try {
+                const [timePart, modifier] = activity.time.split(' ');
+                let [hours, minutes] = timePart.split(':').map(Number);
+                if (modifier === 'PM' && hours < 12) hours += 12;
+                if (modifier === 'AM' && hours === 12) hours = 0;
+                
+                const eventDate = new Date(currentMs);
+                eventDate.setHours(hours, minutes, 0, 0);
+                currentMs = eventDate.getTime();
+            } catch (e) {
+                console.warn("Failed to parse event time for baseline:", activity.time);
+                currentMs += travelMinutes * 60000;
+            }
+        } else {
+            currentMs += travelMinutes * 60000;
+        }
+
         const startTimeDate = new Date(currentMs);
         const timeString = startTimeDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 

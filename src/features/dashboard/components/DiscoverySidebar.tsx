@@ -95,7 +95,7 @@ export const DiscoverySidebar: React.FC<DiscoverySidebarProps> = ({
                     <DiscoveryShimmer />
                 ) : discoveryItems.length > 0 ? (
                     discoveryItems.map((item, idx) => (
-                        item.isSkeleton ? (
+                        (item.isSkeleton || activeTab === 'stay') ? (
                             <SuggestionCard key={item.id || idx} suggestion={item} type={activeTab === 'stay' ? 'accommodation' : 'activity'} />
                         ) : (
                             <SidebarDraggableItem key={idx} item={item} type={activeTab === 'stay' ? 'accommodation' : 'activity'} />

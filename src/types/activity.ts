@@ -34,6 +34,12 @@ export interface Activity {
     imageUrl?: string; 
     isDraft?: boolean; // UI state for manual adds
     isHydrating?: boolean; // UI state for AI suggestions
+    
+    // Ticketmaster / Event Fields
+    isEvent?: boolean;
+    bookingUrl?: string;
+    price_note?: string;
+    eventDate?: string;
 }
 
 export interface ActivitySkeleton {
@@ -47,4 +53,11 @@ export interface ActivitySkeleton {
     cost_estimate?: number;
     durationMinutes?: number;
     isSkeleton: true;
+
+    // Ticketmaster / Event Fields
+    isEvent?: boolean;
+    bookingUrl?: string;
+    price_note?: string;
+    imageUrl?: string;
+    start_date?: string; // ISO combined
 }

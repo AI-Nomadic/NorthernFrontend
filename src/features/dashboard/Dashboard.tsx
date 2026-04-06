@@ -1,4 +1,5 @@
 import React from 'react';
+// Forced reload for filter update
 import { DndContext, rectIntersection, pointerWithin, MeasuringStrategy } from '@dnd-kit/core';
 import { useNavigate, useBlocker, useBeforeUnload } from 'react-router-dom';
 import { motion } from 'framer-motion';
