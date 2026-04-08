@@ -1,0 +1,216 @@
+/* Corrected Premium Northern Login Styles (Purple Theme) */
+
+.login-container {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #0c0b14;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    padding: 20px;
+}
+
+/* Atmospheric Cosmic Background */
+.login-bg-image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.35;
+    filter: brightness(0.6) saturate(1.2);
+    z-index: 0;
+}
+
+/* AI Glow Overlay */
+.login-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+                linear-gradient(to bottom, transparent, #0c0b14);
+    z-index: 1;
+}
+
+/* Compact Glassmorphic Card */
+.glass-card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 380px;
+    background: rgba(18, 16, 26, 0.75);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    padding: 24px 28px;
+    margin: auto;
+    animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cardAppear {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Brand Typography */
+.brand-name {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    background: linear-gradient(135deg, #da09de 0%, #a855f7 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0px;
+    text-align: center;
+}
+
+.brand-tagline {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 0.01em;
+}
+
+/* Compact Tab Switcher */
+.tab-container {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    padding: 2px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 7px;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.tab-btn.active {
+    background: rgba(218, 9, 222, 0.15);
+    color: #f1f5f9;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Compact Input Fields */
+.input-group {
+    margin-bottom: 12px;
+}
+
+.input-label {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+    padding-left: 2px;
+}
+
+.styled-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #f1f5f9;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.styled-input:focus {
+    border-color: rgba(218, 9, 222, 0.4);
+    background: rgba(218, 9, 222, 0.03);
+    box-shadow: 0 0 0 3px rgba(218, 9, 222, 0.08);
+}
+
+/* Primary Button with AI Gradient */
+.primary-btn {
+    width: 100%;
+    background: linear-gradient(135deg, #6366f1 0%, #da09de 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 4px;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+}
+
+.primary-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    transform: translateY(-1px);
+}
+
+/* Divider & Footer */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.divider-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.divider-text {
+    color: #475569;
+    font-size: 0.625rem;
+    font-weight: 600;
+}
+
+.footer-text {
+    text-align: center;
+    color: #475569;
+    font-size: 0.625rem;
+    margin-top: 16px;
+}
+
+/* Error Alert */
+.error-alert {
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+}
+
+.error-text {
+    color: #f87171;
+    font-size: 0.8125rem;
+}
+
+/* Modern Google Button Integration */
+.google-btn-wrapper {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 9999px; /* Matches 'pill' shape */
+    overflow: hidden;
+    padding: 1px;
+}
+
+.google-btn-wrapper:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

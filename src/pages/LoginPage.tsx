@@ -5,6 +5,9 @@ import { RootState } from '../state/store';
 import { useAppDispatch } from '../state';
 import { setAuth } from '../state/slices/userSlice';
 import { register, login, googleLogin } from '../services/authService';
+import { motion, AnimatePresence } from 'framer-motion';
+import './login.css';
+import loginBg from '../assets/login-bg-purple.png';
 
 // Tell TypeScript about the Google Identity Services global
 declare const google: any;
@@ -55,14 +58,15 @@ const LoginPage: React.FC = () => {
         google.accounts.id.renderButton(
             document.getElementById('google-signin-btn'),
             {
-                theme: 'filled_black',
+                theme: 'outline',
                 size: 'large',
-                width: 400,          // must be a number in pixels, not a %
+                width: 330,          // Perfectly optimized for the 380px compact card
                 text: 'continue_with',
-                shape: 'rectangular',
+                shape: 'pill',
+                logo_alignment: 'left',
             }
         );
-    }, [handleGoogleCredential]);
+    }, [handleGoogleCredential, tab]); // Re-render button if tab changes to ensure it finds the element
 
     // ─── Email/password submit ─────────────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
@@ -104,56 +108,58 @@ const LoginPage: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 text-neutral-100 px-4">
-            <div className="w-full max-w-md">
+        <div className="login-container">
+            {/* Immersive Background */}
+            <img src={loginBg} alt="Northern Background" className="login-bg-image" />
+            <div className="login-overlay" />
 
-                {/* Logo / Brand */}
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-amber-500 tracking-tight">Northern</h1>
-                    <p className="text-neutral-400 mt-1 text-sm">Your AI travel architect</p>
+            {/* Glassmorphic Content Card */}
+            <motion.div 
+                className="glass-card"
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            >
+                <header>
+                    <h1 className="brand-name">Northern</h1>
+                    <p className="brand-tagline">Your AI travel architect</p>
+                </header>
+
+                {/* Tab Switcher */}
+                <div className="tab-container">
+                    <button
+                        onClick={() => switchTab('login')}
+                        className={`tab-btn ${tab === 'login' ? 'active' : ''}`}
+                    >
+                        Sign In
+                    </button>
+                    <button
+                        onClick={() => switchTab('register')}
+                        className={`tab-btn ${tab === 'register' ? 'active' : ''}`}
+                    >
+                        Create Account
+                    </button>
                 </div>
 
-                {/* Card */}
-                <div className="bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-800 overflow-hidden">
-
-                    {/* Tabs */}
-                    <div className="flex border-b border-neutral-800">
-                        <button
-                            onClick={() => switchTab('login')}
-                            className={`flex-1 py-3.5 text-sm font-semibold transition-colors duration-200 ${tab === 'login'
-                                ? 'text-amber-500 border-b-2 border-amber-500 bg-neutral-900'
-                                : 'text-neutral-400 hover:text-neutral-200 bg-neutral-950'
-                                }`}
+                <form onSubmit={handleSubmit}>
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={tab}
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            transition={{ duration: 0.3 }}
                         >
-                            Sign In
-                        </button>
-                        <button
-                            onClick={() => switchTab('register')}
-                            className={`flex-1 py-3.5 text-sm font-semibold transition-colors duration-200 ${tab === 'register'
-                                ? 'text-amber-500 border-b-2 border-amber-500 bg-neutral-900'
-                                : 'text-neutral-400 hover:text-neutral-200 bg-neutral-950'
-                                }`}
-                        >
-                            Create Account
-                        </button>
-                    </div>
-
-                    {/* Form */}
-                    <div className="p-8">
-                        <form onSubmit={handleSubmit} className="space-y-4">
-
-                            {/* Name — register only */}
+                            {/* Full Name — register only */}
                             {tab === 'register' && (
-                                <div>
-                                    <label className="block text-xs font-medium text-neutral-400 mb-1.5 uppercase tracking-wider">
-                                        Full Name
-                                    </label>
+                                <div className="input-group">
+                                    <label htmlFor="auth-name" className="input-label">Full Name</label>
                                     <input
                                         type="text"
                                         id="auth-name"
                                         value={name}
                                         onChange={e => setName(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-neutral-100 placeholder-neutral-500 transition"
+                                        className="styled-input"
                                         placeholder="Nazmul Hassan"
                                         required
                                     />
@@ -161,32 +167,28 @@ const LoginPage: React.FC = () => {
                             )}
 
                             {/* Email */}
-                            <div>
-                                <label className="block text-xs font-medium text-neutral-400 mb-1.5 uppercase tracking-wider">
-                                    Email
-                                </label>
+                            <div className="input-group">
+                                <label htmlFor="auth-email" className="input-label">Email Address</label>
                                 <input
                                     type="email"
                                     id="auth-email"
                                     value={email}
                                     onChange={e => setEmail(e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-neutral-100 placeholder-neutral-500 transition"
+                                    className="styled-input"
                                     placeholder="you@example.com"
                                     required
                                 />
                             </div>
 
                             {/* Password */}
-                            <div>
-                                <label className="block text-xs font-medium text-neutral-400 mb-1.5 uppercase tracking-wider">
-                                    Password
-                                </label>
+                            <div className="input-group">
+                                <label htmlFor="auth-password" className="input-label">Password</label>
                                 <input
                                     type="password"
                                     id="auth-password"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-neutral-100 placeholder-neutral-500 transition"
+                                    className="styled-input"
                                     placeholder="••••••••"
                                     required
                                     minLength={6}
@@ -195,58 +197,56 @@ const LoginPage: React.FC = () => {
 
                             {/* Confirm Password — register only */}
                             {tab === 'register' && (
-                                <div>
-                                    <label className="block text-xs font-medium text-neutral-400 mb-1.5 uppercase tracking-wider">
-                                        Confirm Password
-                                    </label>
+                                <div className="input-group">
+                                    <label htmlFor="auth-confirm-password" className="input-label">Confirm Password</label>
                                     <input
                                         type="password"
                                         id="auth-confirm-password"
                                         value={confirmPassword}
                                         onChange={e => setConfirmPassword(e.target.value)}
-                                        className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-neutral-100 placeholder-neutral-500 transition"
+                                        className="styled-input"
                                         placeholder="••••••••"
                                         required
                                     />
                                 </div>
                             )}
+                        </motion.div>
+                    </AnimatePresence>
 
-                            {/* Error message */}
-                            {error && (
-                                <div className="bg-red-900/30 border border-red-700/50 rounded-lg px-4 py-2.5">
-                                    <p className="text-red-400 text-sm">{error}</p>
-                                </div>
-                            )}
-
-                            {/* Submit */}
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-500 disabled:bg-amber-800 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors duration-200 mt-2"
-                            >
-                                {loading
-                                    ? 'Please wait...'
-                                    : tab === 'login' ? 'Sign In' : 'Create Account'
-                                }
-                            </button>
-                        </form>
-
-                        {/* Divider */}
-                        <div className="flex items-center gap-3 my-6">
-                            <div className="flex-1 h-px bg-neutral-700" />
-                            <span className="text-neutral-500 text-xs font-medium">or</span>
-                            <div className="flex-1 h-px bg-neutral-700" />
+                    {/* Error message */}
+                    {error && (
+                        <div className="error-alert">
+                            <p className="error-text">{error}</p>
                         </div>
+                    )}
 
-                        {/* Google Sign-In Button (rendered by Google SDK) */}
-                        <div id="google-signin-btn" className="w-full flex justify-center" />
-                    </div>
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="primary-btn"
+                    >
+                        {loading
+                            ? 'Processing...'
+                            : tab === 'login' ? 'Sign In' : 'Create Account'
+                        }
+                    </button>
+                </form>
+
+                {/* Divider */}
+                <div className="divider">
+                    <div className="divider-line" />
+                    <span className="divider-text">or</span>
+                    <div className="divider-line" />
                 </div>
 
-                <p className="text-center text-neutral-600 text-xs mt-6">
+                {/* Google Sign-In */}
+                <div id="google-signin-btn" className="google-btn-wrapper w-full flex justify-center" />
+
+                <p className="footer-text">
                     By continuing, you agree to Northern's Terms of Service.
                 </p>
-            </div>
+            </motion.div>
         </div>
     );
 };
