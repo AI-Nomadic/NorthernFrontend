@@ -263,7 +263,7 @@ const GalleryPage: React.FC = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                             {/* Empty State */}
                             {!loading && personalTrips.length === 0 && (
-                                <div className="col-span-full flex flex-col items-center gap-3 text-center p-12 text-slate-500 bg-white/50 dark:bg-surface-a5 rounded-2xl border border-dashed border-slate-300 dark:border-surface-a10">
+                                <div className="col-span-full flex flex-col items-center gap-3 text-center p-12 text-slate-500 bg-white/50 dark:bg-surface-a10 rounded-2xl border border-dashed border-slate-300 dark:border-surface-a10">
                                     <Calendar className="w-10 h-10 text-slate-300 dark:text-slate-600" />
                                     <p className="font-semibold">No personal voyages yet.</p>
                                     <p className="text-sm text-slate-400">Start planning your first Canadian adventure!</p>

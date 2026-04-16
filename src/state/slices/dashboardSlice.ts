@@ -226,6 +226,7 @@ const dashboardSlice = createSlice({
                 }
                 state.itinerary.metrics.targetBudget = newBudget;
             }
+            state.isDirty = true;
         },
 
         updateDayData: (state, action: PayloadAction<{ dayIndex: number; dayData: DayPlan }>) => {
@@ -657,7 +658,7 @@ const dashboardSlice = createSlice({
                     startDate: firstDay?.date || new Date().toISOString().split('T')[0],
                     endDate: lastDay?.date || new Date().toISOString().split('T')[0],
                     vibe: TripVibe.RELAX,
-                    budget: 1000,
+                    budget: action.payload.metrics?.targetBudget || 1000,
                     travelers: 2
                 };
                 state.isDirty = false;
@@ -682,15 +683,23 @@ const dashboardSlice = createSlice({
                 // Derive TripState
                 const firstDay = action.payload.itinerary[0];
                 const lastDay = action.payload.itinerary[action.payload.itinerary.length - 1];
+                const targetGeneratedBudget = action.meta.arg.budget || 1000;
+
                 state.tripState = {
                     destination: action.payload.location?.region || action.payload.location?.province || action.payload.trip_title,
                     startDate: firstDay?.date || new Date().toISOString().split('T')[0],
                     endDate: lastDay?.date || new Date().toISOString().split('T')[0],
                     vibe: TripVibe.RELAX,
-                    budget: 1000,
+                    budget: targetGeneratedBudget,
                     travelers: 2
                 };
-                state.isDirty = false;
+
+                // Sync the form's targeted budget dynamically onto the backend-bound itinerary
+                if (!state.itinerary.metrics) state.itinerary.metrics = {};
+                state.itinerary.metrics.targetBudget = targetGeneratedBudget;
+
+                state.isDirty = true; // Mark dirty so it forcibly autosaves to attach the budget natively on first backend touch
+
             })
             .addCase(generateAITrip.rejected, (state, action) => {
                 state.loading = false;

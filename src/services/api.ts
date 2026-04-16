@@ -7,6 +7,11 @@ const PLANNER_API_BASE = import.meta.env.VITE_PLANNER_API_URL || 'http://localho
 
 
 /**
+ * Cache of known saved trips to prevent 404 errors during Upsert operations
+ */
+const knownSavedTrips = new Set<string>();
+
+/**
  * Returns the Authorization header with the stored JWT.
  * Falls back gracefully if no token exists (public routes).
  */
@@ -38,6 +43,10 @@ export const getTrip = async (tripId: string = 'trp_current'): Promise<Trip | nu
             return trip || null;
         }
 
+        if (result && result.id && !isMock) {
+            knownSavedTrips.add(result.id);
+        }
+
         return result;
     } catch (error) {
         console.error('Error fetching trip:', error);
@@ -52,7 +61,9 @@ export const getAllTrips = async (): Promise<Trip[]> => {
     try {
         const response = await fetch(`${REAL_API_BASE}/trips`, { headers: getAuthHeaders() });
         if (!response.ok) throw new Error('Failed to fetch trips');
-        return await response.json();
+        const trips = await response.json();
+        trips.forEach((t: Trip) => knownSavedTrips.add(t.id));
+        return trips;
     } catch (error) {
         console.error('Error fetching all trips:', error);
         return [];
@@ -70,7 +81,11 @@ export const createTrip = async (trip: Trip): Promise<Trip | null> => {
             body: JSON.stringify(trip),
         });
         if (!response.ok) throw new Error(`Failed to create trip: ${response.statusText}`);
-        return await response.json();
+        const created = await response.json();
+        if (created && created.id) {
+            knownSavedTrips.add(created.id);
+        }
+        return created;
     } catch (error) {
         console.error('Error creating trip:', error);
         return null;
@@ -78,16 +93,21 @@ export const createTrip = async (trip: Trip): Promise<Trip | null> => {
 };
 
 export const persistTrip = async (trip: Trip): Promise<Trip | null> => {
-    // Attempt to update first (standard Upsert pattern)
-    // If it fails (due to 404 Not Found or 500 Unknown), we move to create
-    const updated = await updateTrip(trip);
-    if (updated) {
-        console.log('✅ Trip updated successfully');
-        return updated;
+    // If we confidently know the trip exists, perform a PUT immediately.
+    if (knownSavedTrips.has(trip.id)) {
+        return updateTrip(trip);
     }
 
-    console.warn(`⚠️ Update failed for trip ${trip.id}. Attempting to create (POST) instead...`);
-    return createTrip(trip);
+    // Otherwise, the Trip is brand new (fresh from AI-Planner). Perform a POST.
+    const created = await createTrip(trip);
+    if (created) {
+        console.log('✨ Brand new trip saved successfully!');
+        return created;
+    }
+
+    // In the extremely rare case of a desync where POST fails because it exists, fallback to PUT
+    console.warn(`⚠️ Create failed for trip ${trip.id}. Attempting to update (PUT) as fallback...`);
+    return updateTrip(trip);
 };
 
 /**
@@ -110,7 +130,11 @@ export const updateTrip = async (trip: Trip): Promise<Trip | null> => {
             body: JSON.stringify(trip),
         });
         if (!response.ok) throw new Error(`Failed to update trip: ${response.statusText}`);
-        return await response.json();
+        const updated = await response.json();
+        if (updated && updated.id) {
+            knownSavedTrips.add(updated.id);
+        }
+        return updated;
     } catch (error) {
         console.error('Error updating trip:', error);
         return null;

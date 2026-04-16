@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactDOM from 'react-dom';
 import { Trash2, RotateCcw, X, AlertTriangle } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@state';
 import { restoreFromTrash, emptyTrash, setTrashBinOpen } from '@state/slices/dashboardSlice';
@@ -7,21 +8,58 @@ export const TrashBin: React.FC = () => {
     const dispatch = useAppDispatch();
     const trashBin = useAppSelector(state => state.dashboard.trashBin);
     const isOpen = useAppSelector(state => state.dashboard.trashBinOpen);
+    const [isConfirmEmptyOpen, setIsConfirmEmptyOpen] = useState(false);
 
     const handleRestore = (id: string) => {
         dispatch(restoreFromTrash(id));
     };
 
     const handleEmptyTrash = () => {
-        if (window.confirm("Are you sure you want to permanently delete these items?")) {
-            dispatch(emptyTrash());
-        }
+        setIsConfirmEmptyOpen(true);
+    };
+
+    const confirmEmptyTrash = () => {
+        dispatch(emptyTrash());
+        setIsConfirmEmptyOpen(false);
     };
 
     if (trashBin.length === 0 && !isOpen) return null;
 
     return (
-        <div className="fixed bottom-6 right-24 z-50"> {/* Positioned next to ChatBot generally */}
+        <>
+            {isConfirmEmptyOpen && ReactDOM.createPortal(
+                <div className="fixed inset-0 z-[200] flex items-center justify-center">
+                    <div
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                        onClick={() => setIsConfirmEmptyOpen(false)}
+                    />
+                    <div className="relative z-10 w-[340px] bg-white dark:bg-surface-a0 rounded-2xl shadow-2xl border border-slate-100 dark:border-surface-a10 p-6 flex flex-col items-center gap-5 animate-in zoom-in-95 duration-200">
+                        <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center">
+                            <AlertTriangle className="w-6 h-6 text-rose-500" />
+                        </div>
+                        <div className="text-center">
+                            <h3 className="text-base font-bold text-slate-800 dark:text-white">Empty Trash?</h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">This action cannot be undone. All items will be permanently deleted.</p>
+                        </div>
+                        <div className="flex gap-3 w-full">
+                            <button
+                                onClick={() => setIsConfirmEmptyOpen(false)}
+                                className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-surface-a10 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-a10 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmEmptyTrash}
+                                className="flex-1 py-2 rounded-xl bg-rose-500 hover:bg-rose-600 text-white text-sm font-bold transition-colors"
+                            >
+                                Empty
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            <div className="fixed bottom-6 right-24 z-50"> {/* Positioned next to ChatBot generally */}
             {isOpen ? (
                 <div className="bg-white dark:bg-surface-a0 w-80 max-h-[500px] rounded-2xl shadow-2xl flex flex-col border border-slate-200 dark:border-surface-a10 overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-200">
                     <div className="bg-rose-500 dark:bg-rose-600 p-4 flex justify-between items-center text-white">
@@ -94,6 +132,7 @@ export const TrashBin: React.FC = () => {
                     </button>
                 )
             )}
-        </div>
+            </div>
+        </>
     );
 };
