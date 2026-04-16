@@ -215,6 +215,19 @@ const dashboardSlice = createSlice({
             state.hydrating = action.payload;
         },
 
+        setBudget: (state, action: PayloadAction<number>) => {
+            const newBudget = Math.max(100, action.payload);
+            if (state.tripState) {
+                state.tripState.budget = newBudget;
+            }
+            if (state.itinerary) {
+                if (!state.itinerary.metrics) {
+                    state.itinerary.metrics = {};
+                }
+                state.itinerary.metrics.targetBudget = newBudget;
+            }
+        },
+
         updateDayData: (state, action: PayloadAction<{ dayIndex: number; dayData: DayPlan }>) => {
             if (state.itinerary && state.itinerary.itinerary[action.payload.dayIndex]) {
                 state.itinerary.itinerary[action.payload.dayIndex] = action.payload.dayData;
@@ -809,7 +822,8 @@ export const {
     setTrashBinOpen,
     renameTrip,
     updateDayData,
-    setHydrating
+    setHydrating,
+    setBudget
 } = dashboardSlice.actions;
 
 export default dashboardSlice.reducer;

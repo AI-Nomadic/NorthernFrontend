@@ -2,9 +2,9 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, DollarSign, Heart, Sparkles, ChevronDown, Check } from 'lucide-react';
 import { TravelFormData } from '../../../types';
-
 import { cn } from '../../../utils';
 import { useClickOutside } from '../../../hooks/useClickOutside';
+import { usePlacesWidget } from 'react-google-autocomplete';
 
 interface TravelFormProps {
   onSubmit: (data: TravelFormData) => void;
@@ -242,6 +242,9 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
 
   const [formData, setFormData] = useState<TravelFormData>({
     destination: '',
+    lat: undefined,
+    lng: undefined,
+    formattedAddress: '',
     startDate: initialDates.startDate,
     endDate: initialDates.endDate,
     budget: 'Standard',
@@ -250,6 +253,26 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
 
   const [activeTags, setActiveTags] = useState(INTERESTS_POOL.slice(0, 4));
   const [nextInterestIndex, setNextInterestIndex] = useState(4);
+
+  const { ref: placesRef } = usePlacesWidget<HTMLInputElement>({
+    apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    options: {
+        types: ['(cities)'],
+        componentRestrictions: { country: 'ca' },
+        fields: ['address_components', 'geometry', 'formatted_address']
+    },
+    onPlaceSelected: (place: any) => {
+        if (place && place.geometry) {
+            setFormData(prev => ({ 
+                ...prev, 
+                destination: place.formatted_address || place.name || '',
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+                formattedAddress: place.formatted_address
+            }));
+        }
+    }
+  });
 
   const handleInterestDismiss = (tagToReplace: string) => {
     const newItem = INTERESTS_POOL[nextInterestIndex];
@@ -276,15 +299,11 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
     const numDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
     const month = start.toLocaleDateString('en-US', { month: 'long' });
 
-    onSubmit({
-        ...formData,
-        numDays,
-        month
-    });
+    onSubmit({ ...formData, numDays, month });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-xl p-8 md:p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white dark:border-slate-800 space-y-8 transition-all duration-300">
+    <form onSubmit={handleSubmit} className="bg-white/80 dark:bg-slate-900/90 backdrop-blur-xl p-8 md:p-10 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/80 dark:border-slate-800 space-y-8 transition-all duration-300 focus-within:shadow-[0_20px_60px_rgba(218,9,222,0.08),0_0_0_2px_rgba(218,9,222,0.06)] dark:focus-within:shadow-[0_20px_60px_rgba(218,9,222,0.12)]">
       
       {/* Destination Field */}
       <div className="space-y-2">
@@ -293,12 +312,12 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
         </label>
         <div className="relative group">
             <input
+                ref={placesRef}
                 required
                 type="text"
-                placeholder="Where to next?"
-                value={formData.destination}
-                onChange={(e) => setFormData({ ...formData, destination: e.target.value })}
-                className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold italic md:text-lg"
+                placeholder="Where in Canada are we going?"
+                defaultValue={formData.destination}
+                className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold italic md:text-lg outline-none"
             />
             <div className="absolute inset-0 rounded-2xl bg-primary/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" />
         </div>
@@ -335,9 +354,11 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
                         key={interest}
                         type="button"
                         onClick={() => handleInterestDismiss(interest)}
-                        className="group flex items-center gap-1.5 px-4 py-1.5 bg-white dark:bg-slate-800 hover:bg-primary text-slate-600 dark:text-slate-300 hover:text-white transition-all rounded-full border border-slate-200 dark:border-slate-700 hover:border-transparent shadow-sm hover:shadow-lg hover:shadow-primary/30"
+                        className="group flex items-center gap-1.5 px-4 py-1.5 bg-white dark:bg-slate-800 hover:bg-primary text-slate-600 dark:text-slate-300 hover:text-white transition-all rounded-full border border-slate-200 dark:border-slate-700 hover:border-transparent shadow-sm hover:shadow-lg hover:shadow-primary/25"
                     >
-                        <span className="text-[10px] font-bold tracking-wide italic leading-none">+ {interest}</span>
+                        <span className="text-[10px] font-bold tracking-wide italic leading-none flex items-center gap-1">
+                            <span className="transition-transform duration-200 group-hover:rotate-45 inline-block">+</span> {interest}
+                        </span>
                     </button>
                 ))}
             </div>
@@ -361,9 +382,10 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
       <button
         disabled={isLoading}
         type="submit"
-        className="w-full py-5 bg-slate-900 dark:bg-primary text-white rounded-2xl font-black text-lg hover:bg-slate-800 dark:hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-slate-900/10 dark:shadow-primary/20 flex items-center justify-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed group relative overflow-hidden"
+        className="relative overflow-hidden w-full py-5 text-white rounded-2xl font-black text-lg hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/25 dark:shadow-primary/20 flex items-center justify-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed group"
+        style={{ background: 'linear-gradient(135deg, #da09de 0%, #8b5cf6 100%)' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
         {isLoading ? (
           <div className="flex items-center gap-2">
             <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
@@ -379,6 +401,7 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
 
       <div className="flex items-center justify-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] pt-2 opacity-60">
         <span className="w-4 h-px bg-slate-200 dark:bg-slate-800" />
+        <Sparkles className="w-3 h-3 text-primary" />
         Powered by Northern AI
         <span className="w-4 h-px bg-slate-200 dark:bg-slate-800" />
       </div>

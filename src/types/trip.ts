@@ -58,6 +58,7 @@ export interface Trip {
         budgetRange?: string;
         difficulty?: string;
         activityLevel?: string;
+        targetBudget?: number;
     };
 
     summaryStats: {
@@ -103,6 +104,9 @@ export interface TripGenerationRequest {
 
 export interface TravelFormData {
     destination: string;
+    lat?: number;
+    lng?: number;
+    formattedAddress?: string;
     startDate: string;
     endDate: string;
     budget: 'Budget' | 'Standard' | 'Luxury';

@@ -31,6 +31,7 @@ interface DashboardCanvasProps {
     onSelectDay: (dayId: string) => void;
     trashBinOpen: boolean;
     onUpdateDay: (dayId: string, updates: Partial<DayPlan>) => void;
+    startDate: string; // ISO date string: trip start, used to derive per-day dates
 }
 
 export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
@@ -55,7 +56,8 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
     selectedDayId,
     onSelectDay,
     trashBinOpen,
-    onUpdateDay
+    onUpdateDay,
+    startDate
 }) => {
     return (
         <div
@@ -84,6 +86,7 @@ export const DashboardCanvas: React.FC<DashboardCanvasProps> = ({
                                 key={day.id}
                                 dayPlan={day}
                                 dayIndex={index}
+                                startDate={startDate}
                                 onSelectActivity={onSelectActivity}
                                 onSelectAccommodation={onSelectAccommodation}
                                 onAutoSuggestAccommodation={onAutoSuggestAccommodation}

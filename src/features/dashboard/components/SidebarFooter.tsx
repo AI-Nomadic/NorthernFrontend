@@ -126,13 +126,13 @@ export const SidebarFooter: React.FC = () => {
                             </div>
                             {/* Toggle Switch */}
                             <div className={cn(
-                                "w-8 h-4 rounded-full relative transition-colors duration-200",
+                                "w-9 h-5 rounded-full relative transition-colors duration-200",
                                 isDark ? "bg-purple-500" : "bg-slate-200"
                             )}>
                                 <div className={cn(
-                                    "absolute top-1 w-2 h-2 bg-white rounded-full shadow-sm transition-all duration-200",
+                                    "absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm transition-all duration-200",
                                     isDark ? "left-5" : "left-1"
-                                )}></div>
+                                )} />
                             </div>
                         </button>
                         <button className="w-full flex items-center justify-between px-3 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-surface-a10 rounded-lg group transition-colors">
@@ -167,7 +167,7 @@ export const SidebarFooter: React.FC = () => {
                 >
                     <div className="flex items-center gap-3">
                         {/* Avatar */}
-                        <div className="w-10 h-10 rounded-full bg-purple-500 flex items-center justify-center text-white font-bold border border-purple-600/20 overflow-hidden shadow-sm">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold overflow-hidden shadow-md ring-2 ring-primary/10 group-hover:ring-primary/30 transition-all">
                             {(email?.[0] || 'U').toUpperCase()}
                         </div>
 
@@ -176,7 +176,16 @@ export const SidebarFooter: React.FC = () => {
                             <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate w-full">
                                 {email?.split('@')[0] || 'User'}
                             </span>
-                            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-tight">Pro Plan</span>
+                            <span
+                                className="text-[9px] font-black uppercase tracking-tight px-1.5 py-0.5 rounded-full border"
+                                style={{
+                                    background: 'linear-gradient(135deg, rgba(218,9,222,0.15) 0%, rgba(139,92,246,0.15) 100%)',
+                                    color: '#da09de',
+                                    borderColor: 'rgba(218,9,222,0.2)'
+                                }}
+                            >
+                                Pro Plan
+                            </span>
                         </div>
                     </div>
 

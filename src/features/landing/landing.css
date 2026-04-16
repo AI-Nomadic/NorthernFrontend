@@ -1,15 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 .glassmorphism {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5), 0 4px 24px rgba(0, 0, 0, 0.04);
 }
 
 .dark .glassmorphism {
-    background: rgba(18, 18, 18, 0.8);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(10, 10, 15, 0.85);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 24px rgba(0, 0, 0, 0.3);
 }
 
 .text-gradient-chaos {
@@ -25,7 +27,7 @@
 
 /* Base body styles for landing page if needed */
 .landing-body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', 'Outfit', sans-serif;
     background-color: #fcfcfc;
     overflow-x: hidden;
     --map-fill: #F1F5F9;
@@ -38,4 +40,26 @@
     --map-fill: #1e1e1e;
     --map-stroke: #333333;
     transition: background-color 0.3s ease;
+}
+
+/* Nav link hover underline animation */
+.nav-link {
+    position: relative;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    right: 50%;
+    height: 2px;
+    background: linear-gradient(90deg, #da09de, #8b5cf6);
+    border-radius: 999px;
+    transition: left 0.25s ease, right 0.25s ease;
+}
+
+.nav-link:hover::after {
+    left: 0;
+    right: 0;
 }

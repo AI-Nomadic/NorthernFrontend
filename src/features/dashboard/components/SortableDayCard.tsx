@@ -24,6 +24,7 @@ interface SortableDayCardProps {
     trashBinOpen?: boolean;
     onUpdateDay?: (dayId: string, updates: Partial<DayPlan>) => void;
     dayIndex: number;
+    startDate: string;
 }
 
 export const SortableDayCard: React.FC<SortableDayCardProps> = (props) => {

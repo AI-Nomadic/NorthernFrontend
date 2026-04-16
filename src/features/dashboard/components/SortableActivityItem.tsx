@@ -107,7 +107,7 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
             ref={setNodeRef}
             style={style}
             onClick={(e) => { e.stopPropagation(); onClick(); }}
-            className="group relative bg-white dark:bg-surface-a10 p-3 rounded-xl border border-slate-100 dark:border-surface-a20 shadow-sm mb-2 hover:border-primary-a30 dark:hover:border-primary-a30 transition-all cursor-pointer"
+            className="group relative bg-white dark:bg-surface-a10 p-3 rounded-xl border border-slate-100 dark:border-surface-a20 shadow-sm mb-2 hover:border-primary-a30 dark:hover:border-primary-a30 transition-all cursor-pointer border-l-2 border-l-transparent hover:border-l-primary/40"
         >
             <div
                 className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1"
@@ -119,7 +119,7 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
             <div className="flex gap-3">
                 <div className="flex flex-col items-center pt-1 min-w-[3rem]">
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{activity.time}</span>
-                    <div className="h-full w-0.5 bg-slate-200 dark:bg-slate-600 my-1 relative">
+                    <div className="h-full w-0.5 my-1 relative" style={{ background: 'linear-gradient(to bottom, rgba(218,9,222,0.3), transparent)' }}>
                         {activity.travelTimeFromPrev ? (
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-surface-a30 border border-slate-300 dark:border-slate-500 text-[9px] px-1 rounded-full whitespace-nowrap text-slate-500 dark:text-slate-200 font-medium z-10">
                                 +{activity.travelTimeFromPrev}m
@@ -131,7 +131,7 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
                     <div className="flex items-center gap-2 mb-1">
                         <h4 className="text-sm font-semibold text-slate-800 dark:text-white leading-tight">{activity.title}</h4>
                         {activity.isEvent && (
-                            <span className="px-1.5 py-0.5 bg-indigo-100 dark:bg-indigo-900/40 text-[8px] font-black uppercase text-indigo-600 dark:text-indigo-400 rounded-md border border-indigo-200 dark:border-indigo-800/30 animate-pulse">
+                            <span className="px-1.5 py-0.5 bg-primary/10 dark:bg-primary/10 text-[8px] font-black uppercase text-primary dark:text-primary-a30 rounded-md border border-primary/20 dark:border-primary/15">
                                 Event
                             </span>
                         )}
@@ -142,7 +142,7 @@ export const SortableActivityItem: React.FC<SortableActivityItemProps> = ({ acti
                             <Clock className="w-3 h-3" /> 
                             {activity.isEvent ? 'Fixed Time' : `${activity.durationMinutes}m`}
                         </span>
-                        <span className={`flex items-center gap-1 ${activity.price_note ? 'text-indigo-500 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                        <span className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md ${activity.price_note ? 'text-indigo-500 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20' : 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'}`}>
                             <DollarSign className="w-3 h-3" /> 
                             {activity.price_note || `${activity.cost_estimate} CAD`}
                         </span>

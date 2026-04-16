@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { 
   createBrowserRouter, 
   RouterProvider, 
@@ -16,9 +16,20 @@ import { TravelFormData } from '@types';
 import { fetchItinerary, resetDashboard, generateAITrip } from './state/slices/dashboardSlice';
 import { logout } from './state/slices/userSlice';
 import { useAppDispatch, useAppSelector } from './state';
+import { GeneratingAnimation } from './features/landing/components/GeneratingAnimation';
+
+/* ── Lightweight context: share pending destination + numDays across routes ── */
+const GeneratingContext = createContext<{
+  destination: string;
+  setDestination: (d: string) => void;
+  numDays: number;
+  setNumDays: (n: number) => void;
+}>({ destination: '', setDestination: () => {}, numDays: 3, setNumDays: () => {} });
 
 const RootLayout: React.FC = () => {
-  const theme = useAppSelector(state => state.user.theme);
+  const theme        = useAppSelector(state => state.user.theme);
+  const isGenerating = useAppSelector(state => state.dashboard.loading);
+  const { destination, numDays } = useContext(GeneratingContext);
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -28,8 +39,12 @@ const RootLayout: React.FC = () => {
     }
   }, [theme]);
 
-  // Use this to prevent router resets when state changes
-  return <Outlet />;
+  return (
+    <>
+      <GeneratingAnimation isVisible={isGenerating} destination={destination} numDays={numDays} />
+      <Outlet />
+    </>
+  );
 };
 
 const DashboardRouteWrapper: React.FC = () => {
@@ -53,32 +68,30 @@ const DashboardRouteWrapper: React.FC = () => {
     navigate('/');
   };
 
+  // While loading, return null — GeneratingAnimation in RootLayout covers the screen
   if (loading || !itinerary || !tripState) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-[#FCFCFC] dark:bg-surface-a0">
-        <div className="flex flex-col items-center gap-4 text-slate-500">
-          <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-medium">Loading your trip...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return <Dashboard onReset={reset} />;
 };
 
-// Helper component to handle generation + navigation
 const LandingPageWithNavigate: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const navigate = useNavigate();
+  const dispatch     = useAppDispatch();
+  const navigate     = useNavigate();
   const isGenerating = useAppSelector(state => state.dashboard.loading);
+  const { setDestination, setNumDays } = useContext(GeneratingContext);
 
   const handleGenerate = async (formData: TravelFormData) => {
+    const days = (formData as any).numDays ?? 3;
+    setDestination(formData.destination || '');
+    setNumDays(days);
     try {
       await dispatch(generateAITrip(formData)).unwrap();
       navigate('/dashboard');
     } catch (err) {
       console.error('Itinerary generation failed', err);
+      setDestination('');
     }
   };
 
@@ -127,7 +140,14 @@ const router = createBrowserRouter([
 ]);
 
 const App: React.FC = () => {
-  return <RouterProvider router={router} />;
+  const [destination, setDestination] = useState('');
+  const [numDays,     setNumDays]     = useState(3);
+
+  return (
+    <GeneratingContext.Provider value={{ destination, setDestination, numDays, setNumDays }}>
+      <RouterProvider router={router} />
+    </GeneratingContext.Provider>
+  );
 };
 
 export default App;

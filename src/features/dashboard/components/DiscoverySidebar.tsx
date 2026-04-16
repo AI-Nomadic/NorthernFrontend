@@ -70,8 +70,10 @@ export const DiscoverySidebar: React.FC<DiscoverySidebarProps> = ({
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                            "flex-1 flex flex-col items-center gap-1 py-3 rounded-lg transition-all text-[10px] font-bold uppercase tracking-wide",
-                            activeTab === tab.id ? "bg-white dark:bg-surface-a10 shadow-sm text-primary-a10 dark:text-primary-a30 border border-transparent dark:border-surface-a20" : "text-slate-400 dark:text-slate-500 hover:bg-white/50 dark:hover:bg-surface-a10/50 hover:text-slate-600 dark:hover:text-slate-300"
+                            "flex-1 flex flex-col items-center gap-1 py-3 rounded-lg transition-all text-[10px] font-bold uppercase tracking-wide relative",
+                            activeTab === tab.id
+                                ? "bg-white dark:bg-surface-a10 shadow-sm text-primary-a10 dark:text-primary-a30 border border-transparent dark:border-surface-a20 after:absolute after:bottom-0 after:left-1/4 after:right-1/4 after:h-0.5 after:bg-gradient-to-r after:from-primary after:to-purple-500 after:rounded-full"
+                                : "text-slate-400 dark:text-slate-500 hover:bg-white/50 dark:hover:bg-surface-a10/50 hover:text-slate-600 dark:hover:text-slate-300"
                         )}
                     >
                         <tab.icon className="w-4 h-4" />{tab.label}
@@ -103,12 +105,13 @@ export const DiscoverySidebar: React.FC<DiscoverySidebarProps> = ({
                     ))
                 ) : (
                     <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-600 gap-4 opacity-60">
-                        <Compass className="w-12 h-12 stroke-[1.5px]" />
+                        <Compass className="w-12 h-12 stroke-[1.5px]" style={{ animation: 'spin 3s linear infinite' }} />
                         <span className="text-sm font-medium">No results found for these vibes.</span>
-                        <button 
+                        <button
                             onClick={onRefresh}
-                            className="text-xs font-bold text-indigo-500 hover:text-indigo-400 transition-colors uppercase tracking-widest"
+                            className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-a10 transition-colors uppercase tracking-widest group"
                         >
+                            <RefreshCcw className="w-3.5 h-3.5 group-hover:animate-spin" />
                             Try Shuffling
                         </button>
                     </div>

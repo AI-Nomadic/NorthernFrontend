@@ -21,9 +21,7 @@ const GalleryPage: React.FC = () => {
 
     // -- UI State --
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [activeCategory, setActiveCategory] = useState('All');
     const [sortBy, setSortBy] = useState<'recent' | 'alphabetical' | 'destination'>('recent');
-    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
     useEffect(() => {
         dispatch(fetchSavedTrips());
@@ -98,12 +96,8 @@ const GalleryPage: React.FC = () => {
                 <GallerySidebar
                     isOpen={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
-                    activeCategory={activeCategory}
-                    onSelectCategory={setActiveCategory}
                     sortBy={sortBy}
                     onSortChange={setSortBy}
-                    showFavoritesOnly={showFavoritesOnly}
-                    onToggleFavorites={() => setShowFavoritesOnly(!showFavoritesOnly)}
                     totalTrips={savedTrips.length}
                 />
             </div>
@@ -158,25 +152,31 @@ const GalleryPage: React.FC = () => {
                     <div className="max-w-7xl mx-auto">
                         {/* Loading State */}
                         {(loading || invitationsLoading) && savedTrips.length === 0 && invitations.length === 0 && (
-                            <div className="flex items-center justify-center p-12 text-slate-400">
-                                Loading your adventures...
+                            <div className="flex flex-col items-center justify-center gap-3 p-12 text-slate-400">
+                                <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                <p className="text-sm font-medium">Loading your adventures...</p>
                             </div>
                         )}
 
                         {/* Pending Invitations Section */}
                         {invitations.length > 0 && (
                             <section className="mb-12">
-                                <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
-                                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                                        <Heart className="w-5 h-5 text-purple-600 dark:text-purple-400 fill-purple-600" />
+                                <motion.h2
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ duration: 0.4 }}
+                                    className="text-2xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"
+                                >
+                                    <div className="p-2 rounded-lg bg-primary/10 dark:bg-primary/10">
+                                        <Heart className="w-5 h-5 text-primary fill-primary" />
                                     </div>
                                     Pending Invitations
-                                </h2>
+                                </motion.h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {invitations.map((invite) => (
                                         <div
                                             key={invite.id}
-                                            className="group relative bg-white dark:bg-surface-a0 rounded-2xl border-2 border-purple-200 dark:border-purple-500/20 overflow-hidden hover:shadow-xl transition-all duration-300"
+                                            className="group relative bg-white dark:bg-surface-a0 rounded-2xl border-2 border-primary/25 dark:border-primary/20 overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 animate-pulse-glow"
                                         >
                                             {/* -- transcluent blurry overlay -- */}
                                             <div className="absolute inset-0 bg-white/0 dark:bg-black/10 backdrop-blur-[6px] flex flex-col items-center justify-center z-20">
@@ -210,11 +210,6 @@ const GalleryPage: React.FC = () => {
                                                     alt={invite.trip_title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />
-                                                <div className="absolute top-3 right-3">
-                                                    <div className="p-2 rounded-full bg-purple-600/80 backdrop-blur-md text-white">
-                                                        <Heart className="w-4 h-4 fill-white" />
-                                                    </div>
-                                                </div>
                                             </div>
 
                                             {/* Content */}
@@ -240,8 +235,7 @@ const GalleryPage: React.FC = () => {
                                                     </div>
                                                 </div>
 
-                                                <div className="pt-4 border-t border-slate-100 dark:border-surface-a10 flex items-center justify-between">
-                                                    <span className="text-xs text-slate-400">Invite from {invite.last_edited ? '3d ago' : 'Recently'}</span>
+                                                <div className="pt-4 border-t border-slate-100 dark:border-surface-a10 flex items-center justify-end">
                                                     <button className="flex items-center gap-1 text-sm font-bold text-purple-600 dark:text-purple-400 hover:translate-x-1 transition-transform">
                                                         Accept Invite <ArrowRight className="w-3 h-3" />
                                                     </button>
@@ -254,18 +248,25 @@ const GalleryPage: React.FC = () => {
                         )}
 
                         {/* Your Trips Section (Personal) */}
-                        <h2 className="text-2xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+                        <motion.h2
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4 }}
+                            className="text-2xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2"
+                        >
                             <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
                                 <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             Your Voyages
-                        </h2>
+                        </motion.h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
                             {/* Empty State */}
                             {!loading && personalTrips.length === 0 && (
-                                <div className="col-span-full text-center p-12 text-slate-500 bg-white/50 dark:bg-surface-a5 rounded-2xl border border-dashed border-slate-300 dark:border-surface-a10">
-                                    No personal voyages found. Why not create one?
+                                <div className="col-span-full flex flex-col items-center gap-3 text-center p-12 text-slate-500 bg-white/50 dark:bg-surface-a5 rounded-2xl border border-dashed border-slate-300 dark:border-surface-a10">
+                                    <Calendar className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                                    <p className="font-semibold">No personal voyages yet.</p>
+                                    <p className="text-sm text-slate-400">Start planning your first Canadian adventure!</p>
                                 </div>
                             )}
 
@@ -274,7 +275,7 @@ const GalleryPage: React.FC = () => {
                                 <div
                                     key={trip.id}
                                     onClick={() => handleTripClick(trip.id)}
-                                    className="group relative bg-white dark:bg-surface-a0 rounded-2xl border border-slate-200 dark:border-surface-a10 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer hover:-translate-y-1"
+                                    className="group relative bg-white dark:bg-surface-a0 rounded-2xl border border-slate-200 dark:border-surface-a10 overflow-hidden hover:shadow-xl hover:shadow-purple-500/8 transition-all duration-300 cursor-pointer hover:-translate-y-1 ring-1 ring-inset ring-black/5 dark:ring-white/5"
                                 >
                                     {/* Image / Cover */}
                                     <div className="h-48 bg-slate-200 dark:bg-surface-a20 relative overflow-hidden">
@@ -286,11 +287,6 @@ const GalleryPage: React.FC = () => {
                                             alt={trip.trip_title}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
-                                        <div className="absolute top-3 right-3">
-                                            <button className="p-2 rounded-full bg-black/20 hover:bg-black/40 backdrop-blur-md text-white transition-colors">
-                                                <Heart className="w-4 h-4" />
-                                            </button>
-                                        </div>
                                     </div>
 
                                     {/* Content */}
@@ -312,12 +308,11 @@ const GalleryPage: React.FC = () => {
                                             </div>
                                             <div className="flex items-center gap-1 bg-slate-100 dark:bg-surface-a10 px-2 py-1 rounded-md">
                                                 <DollarSign className="w-3 h-3" />
-                                                {trip.currency}
+                                                {trip.metrics?.targetBudget ? `$${trip.metrics.targetBudget.toLocaleString()} ` : ''}{trip.currency || 'CAD'}
                                             </div>
                                         </div>
 
-                                        <div className="pt-4 border-t border-slate-100 dark:border-surface-a10 flex items-center justify-between">
-                                            <span className="text-xs text-slate-400">{trip.last_edited || 'Last edited 2d ago'}</span>
+                                        <div className="pt-4 border-t border-slate-100 dark:border-surface-a10 flex items-center justify-end">
                                             <span className="flex items-center gap-1 text-sm font-bold text-purple-600 dark:text-purple-500 group-hover:translate-x-1 transition-transform">
                                                 Open <ArrowRight className="w-3 h-3" />
                                             </span>
@@ -377,7 +372,7 @@ const GalleryPage: React.FC = () => {
                                                     </div>
                                                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-surface-a10 px-2 py-1 rounded-md">
                                                         <DollarSign className="w-3 h-3" />
-                                                        {trip.currency}
+                                                        {trip.metrics?.targetBudget ? `$${trip.metrics.targetBudget.toLocaleString()} ` : ''}{trip.currency || 'CAD'}
                                                     </div>
                                                 </div>
 
@@ -444,7 +439,7 @@ const GalleryPage: React.FC = () => {
                                                     </div>
                                                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-surface-a10 px-2 py-1 rounded-md">
                                                         <DollarSign className="w-3 h-3" />
-                                                        {trip.currency}
+                                                        {trip.metrics?.targetBudget ? `$${trip.metrics.targetBudget.toLocaleString()} ` : ''}{trip.currency || 'CAD'}
                                                     </div>
                                                 </div>
 

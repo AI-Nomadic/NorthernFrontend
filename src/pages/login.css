@@ -1,4 +1,4 @@
-/* Corrected Premium Northern Login Styles (Purple Theme) */
+/* Premium Northern Login Styles (Purple Theme) */
 
 .login-container {
     position: relative;
@@ -28,7 +28,7 @@
 .login-overlay {
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+    background: radial-gradient(circle at 50% 50%, rgba(218, 9, 222, 0.07) 0%, transparent 60%),
                 linear-gradient(to bottom, transparent, #0c0b14);
     z-index: 1;
 }
@@ -38,26 +38,26 @@
     position: relative;
     z-index: 10;
     width: 100%;
-    max-width: 380px;
-    background: rgba(18, 16, 26, 0.75);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 20px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
-    padding: 24px 28px;
+    max-width: 390px;
+    background: rgba(18, 16, 26, 0.78);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    padding: 28px 30px;
     margin: auto;
-    animation: cardAppear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: cardAppear 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes cardAppear {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(18px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* Brand Typography */
 .brand-name {
-    font-size: 2rem;
+    font-size: 2.1rem;
     font-weight: 800;
     letter-spacing: -0.04em;
     background: linear-gradient(135deg, #da09de 0%, #a855f7 100%);
@@ -72,42 +72,54 @@
     color: #94a3b8;
     font-size: 0.75rem;
     text-align: center;
-    margin-bottom: 20px;
-    letter-spacing: 0.01em;
+    margin-bottom: 22px;
+    letter-spacing: 0.05em;
 }
 
 /* Compact Tab Switcher */
 .tab-container {
     display: flex;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 10px;
-    padding: 2px;
-    margin-bottom: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.45);
+    border-radius: 11px;
+    padding: 3px;
+    margin-bottom: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .tab-btn {
     flex: 1;
-    padding: 6px;
+    padding: 7px;
     font-size: 0.75rem;
     font-weight: 600;
     color: #64748b;
-    border-radius: 7px;
-    transition: all 0.2s ease;
+    border-radius: 8px;
+    transition: all 0.25s ease;
     border: none;
     background: transparent;
     cursor: pointer;
+    position: relative;
 }
 
 .tab-btn.active {
-    background: rgba(218, 9, 222, 0.15);
+    background: rgba(218, 9, 222, 0.14);
     color: #f1f5f9;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, #da09de, #8b5cf6);
+    border-radius: 999px;
 }
 
 /* Compact Input Fields */
 .input-group {
-    margin-bottom: 12px;
+    margin-bottom: 13px;
 }
 
 .input-label {
@@ -116,17 +128,17 @@
     font-weight: 700;
     color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 4px;
+    letter-spacing: 0.08em;
+    margin-bottom: 5px;
     padding-left: 2px;
 }
 
 .styled-input {
     width: 100%;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.28);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 9px;
+    padding: 9px 13px;
     color: #f1f5f9;
     font-size: 0.875rem;
     transition: all 0.2s ease;
@@ -134,31 +146,49 @@
 }
 
 .styled-input:focus {
-    border-color: rgba(218, 9, 222, 0.4);
-    background: rgba(218, 9, 222, 0.03);
-    box-shadow: 0 0 0 3px rgba(218, 9, 222, 0.08);
+    border-color: rgba(218, 9, 222, 0.45);
+    background: rgba(218, 9, 222, 0.04);
+    box-shadow: 0 0 0 3px rgba(218, 9, 222, 0.12);
 }
 
 /* Primary Button with AI Gradient */
 .primary-btn {
     width: 100%;
-    background: linear-gradient(135deg, #6366f1 0%, #da09de 100%);
+    background: linear-gradient(135deg, #da09de 0%, #8b5cf6 100%);
     color: white;
     font-weight: 700;
     font-size: 0.875rem;
-    padding: 10px;
-    border-radius: 8px;
+    padding: 11px;
+    border-radius: 9px;
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
     margin-top: 4px;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 4px 15px rgba(218, 9, 222, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.primary-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .primary-btn:hover {
-    filter: brightness(1.1);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
-    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(218, 9, 222, 0.4);
+    transform: translateY(-2px);
+}
+
+.primary-btn:hover::before {
+    opacity: 1;
+}
+
+.primary-btn:active {
+    transform: translateY(0);
 }
 
 /* Divider & Footer */
@@ -166,32 +196,36 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    margin: 16px 0;
+    margin: 18px 0;
 }
 
 .divider-line {
     flex: 1;
     height: 1px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .divider-text {
     color: #475569;
     font-size: 0.625rem;
     font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 }
 
 .footer-text {
     text-align: center;
     color: #475569;
     font-size: 0.625rem;
-    margin-top: 16px;
+    margin-top: 18px;
+    line-height: 1.6;
 }
 
 /* Error Alert */
 .error-alert {
-    background: rgba(220, 38, 38, 0.1);
-    border: 1px solid rgba(220, 38, 38, 0.15);
+    background: rgba(220, 38, 38, 0.08);
+    border: 1px solid rgba(220, 38, 38, 0.18);
+    border-left: 3px solid rgba(248, 113, 113, 0.8);
     padding: 10px 14px;
     border-radius: 10px;
     margin-bottom: 16px;
@@ -202,15 +236,15 @@
     font-size: 0.8125rem;
 }
 
-/* Modern Google Button Integration */
+/* Google Button Integration */
 .google-btn-wrapper {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 9999px; /* Matches 'pill' shape */
+    border-radius: 9999px;
     overflow: hidden;
     padding: 1px;
 }
 
 .google-btn-wrapper:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }

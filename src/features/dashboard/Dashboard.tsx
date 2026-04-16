@@ -403,6 +403,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
               isPanning={isPanning}
               itinerary={itinerary.itinerary}
               activeId={activeId}
+              startDate={tripState.startDate}
               onSelectActivity={(activity) => dispatch(selectActivity(activity))}
               onUpdateActivity={handleUpdateActivity}
               onRemoveActivity={handleRemoveActivity}
@@ -485,7 +486,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
           />
 
           {/* Budget Auditor - Overlay Top Right */}
-          <BudgetAuditor totalCost={itinerary.itinerary.reduce((total, day) => { const activitiesCost = day.activities.reduce((sum, act) => sum + (act.cost_estimate || 0), 0); const hotelCost = day.accommodation?.pricePerNight || 0; return total + activitiesCost + hotelCost; }, 0)} budget={tripState.budget} />
+          <BudgetAuditor totalCost={itinerary.itinerary.reduce((total, day) => { const activitiesCost = day.activities.reduce((sum, act) => sum + (act.cost_estimate || 0), 0); const hotelCost = day.accommodation?.pricePerNight || 0; return total + activitiesCost + hotelCost; }, 0)} budget={itinerary.metrics?.targetBudget || tripState?.budget || 1000} />
         </div>
 
         {/* Trip Group Chat - Fixed bottom-right */}

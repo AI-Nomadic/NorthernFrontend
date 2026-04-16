@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useClickOutside } from '../../../hooks/useClickOutside';
 import {
     ChevronLeft,
+    ChevronRight,
     PanelLeftOpen,
     Mail,
     UserPlus,
@@ -134,10 +135,10 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 )}
 
                 <div>
-                    {/* Breadcrumb / Context */}
-                    <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-400 font-medium mb-0.5">
+                    {/* Breadcrumb */}
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-400 font-medium mb-0.5">
                         <span>Trips</span>
-                        <span>/</span>
+                        <ChevronRight className="w-3 h-3 opacity-50" />
                         <span className="dark:text-gray-200">{destination}</span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -167,7 +168,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 </h1>
                             </div>
                         )}
-                        <span className="px-2 py-0.5 rounded-full bg-[#da09de1a] dark:bg-[#da09de1a] text-primary-a10 dark:text-primary-a30 text-[10px] font-bold uppercase tracking-wider border border-[#f193ee4d] dark:border-[#f193ee33]">
+                        <span className="px-2 py-0.5 rounded-full bg-[#da09de1a] dark:bg-[#da09de1a] text-primary-a10 dark:text-primary-a30 text-[10px] font-bold uppercase tracking-wider border border-[#f193ee4d] dark:border-[#f193ee33] flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-primary-a10 dark:bg-primary-a30 animate-pulse" />
                             Planning
                         </span>
                         {isPublished && (

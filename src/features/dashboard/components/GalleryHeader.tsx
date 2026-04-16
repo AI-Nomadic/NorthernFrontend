@@ -45,7 +45,7 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({
                     <h1 className="text-xl font-bold text-gray-800 dark:text-white tracking-tight">
                         My Collection
                     </h1>
-                    <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-surface-a10 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider border border-slate-200 dark:border-surface-a20">
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 dark:bg-primary/10 text-primary dark:text-primary-a30 text-[10px] font-bold uppercase tracking-wider border border-primary/20">
                         Library
                     </span>
                 </div>
@@ -58,7 +58,7 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({
                     <input
                         type="text"
                         placeholder="Search trips..."
-                        className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-surface-a10 border border-slate-200 dark:border-surface-a20 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+                        className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-surface-a10 border border-slate-200 dark:border-surface-a20 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 dark:focus:border-primary/30 transition-all"
                     />
                 </div>
             </div>
@@ -68,25 +68,14 @@ export const GalleryHeader: React.FC<GalleryHeaderProps> = ({
                 {/* Create New Trip Button */}
                 <button
                     onClick={onCreateTrip}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95"
+                    className="relative overflow-hidden flex items-center gap-2 px-3 py-2 text-sm font-medium text-white rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95 hover:opacity-90"
+                    style={{ background: 'linear-gradient(135deg, #da09de 0%, #8b5cf6 100%)' }}
                 >
-                    <Plus className="h-4 w-4" />
-                    <span className="hidden sm:inline">New Trip</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent -translate-x-full hover:translate-x-full transition-transform duration-700" />
+                    <Plus className="h-4 w-4 relative z-10" />
+                    <span className="hidden sm:inline relative z-10">New Trip</span>
                 </button>
 
-                <div className="h-6 w-px bg-slate-200 dark:bg-surface-a20 mx-1"></div>
-
-                {/* Invitations Badge */}
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/20 border border-purple-100 dark:border-purple-500/20 text-purple-600 dark:text-purple-400 transition-all hover:bg-purple-100 dark:hover:bg-purple-900/30">
-                    <span className="text-[10px] font-bold uppercase tracking-widest ml-1">
-                        Invite
-                    </span>
-                    {invitationCount > 0 && (
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-1 ring-white/20 animate-pulse">
-                            {invitationCount}
-                        </div>
-                    )}
-                </div>
             </div>
         </div>
     );

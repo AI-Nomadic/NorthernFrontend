@@ -28,6 +28,7 @@ interface DayCardProps {
     trashBinOpen?: boolean;
     onUpdateDay?: (dayId: string, updates: Partial<DayPlan>) => void;
     dayIndex: number;
+    startDate: string;
 }
 
 export const DayCard: React.FC<DayCardProps> = ({
@@ -46,8 +47,18 @@ export const DayCard: React.FC<DayCardProps> = ({
     onSelectDay,
     trashBinOpen = false,
     onUpdateDay,
-    dayIndex
+    dayIndex,
+    startDate
 }) => {
+    // Derive this card's date: trip start + dayIndex days
+    const cardDate = React.useMemo(() => {
+        try {
+            const base = new Date(startDate.replace(/-/g, '/'));
+            base.setDate(base.getDate() + dayIndex);
+            return base.toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric' });
+        } catch { return null; }
+    }, [startDate, dayIndex]);
+
     // -- Local Editing State --
     const [isEditing, setIsEditing] = React.useState(false);
     const [themeText, setThemeText] = React.useState(dayPlan.theme);
@@ -102,10 +113,15 @@ export const DayCard: React.FC<DayCardProps> = ({
                 (trashBinOpen && isSelected) && "border-primary-a0 ring-4 ring-[#da09de66] scale-[1.02] shadow-2xl z-10 cursor-pointer",
                 (trashBinOpen && !isSelected) && "opacity-60 grayscale-[0.5] scale-95 hover:opacity-100 hover:grayscale-0 hover:scale-100 cursor-pointer"
             )}>
-            <div className="p-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white shrink-0">
+            <div className="p-4 bg-gradient-to-r from-[#0f0718] to-[#0a0a14] text-white shrink-0 border-t-2" style={{ borderTopColor: 'rgba(218,9,222,0.5)' }}>
                 <div className="flex justify-between items-start">
                     <div className="flex-1 mr-2">
-                        <h2 className="text-lg font-bold select-none text-white">Day {dayIndex + 1}</h2>
+                        {cardDate && (
+                            <p className="text-[11px] font-black uppercase tracking-wider mb-0.5" style={{ color: '#e879f9' }}>
+                                {cardDate}
+                            </p>
+                        )}
+                        <h2 className="text-lg font-bold select-none"><span className="text-primary-a40">Day</span> {dayIndex + 1}</h2>
                         {isEditing ? (
                             <input
                                 ref={inputRef}
@@ -218,12 +234,12 @@ export const DayCard: React.FC<DayCardProps> = ({
                     <button
                         onClick={() => onAddActivity && onAddActivity(dayPlan.id)}
                         className="w-full mt-3 py-3 px-4 flex items-center justify-center gap-2
-                                   rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-500
-                                   text-slate-500 dark:text-slate-400 font-medium
-                                   hover:bg-[#da09de1a] dark:hover:bg-[#da09de1a] hover:text-primary-a0 dark:hover:text-primary-a10 hover:border-primary-a0 dark:hover:border-primary-a10
-                                   transition-all duration-200 group opacity-80 hover:opacity-100 mb-4"
+                                   rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-600
+                                   text-slate-400 dark:text-slate-500 font-medium
+                                   hover:bg-[#da09de12] dark:hover:bg-[#da09de18] hover:text-primary-a0 dark:hover:text-primary-a10 hover:border-primary-a0 dark:hover:border-primary-a10
+                                   transition-all duration-200 group opacity-70 hover:opacity-100 mb-4"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
                         <span className="text-sm">Add Activity</span>
                     </button>
                 </div>
@@ -233,7 +249,7 @@ export const DayCard: React.FC<DayCardProps> = ({
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider w-1/3 text-left">
                     {dayPlan.activities.length} Stops
                 </span>
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider w-1/3 text-center">
+                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-wider w-1/3 text-center tabular-nums">
                     Est: ${dayPlan.activities.reduce((s, a) => s + a.cost_estimate, 0) + (dayPlan.accommodation?.pricePerNight || 0)}
                 </span>
                 <div className="w-1/3 flex justify-end">

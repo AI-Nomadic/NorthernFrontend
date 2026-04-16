@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, PanelLeftClose, Filter, SortAsc, Heart, BarChart2, Globe } from 'lucide-react';
+import { Sparkles, PanelLeftClose, SortAsc, BarChart2, Globe } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { cn } from '@utils';
 import { SidebarFooter } from './SidebarFooter';
@@ -8,17 +8,9 @@ interface GallerySidebarProps {
     isOpen: boolean;
     onClose: () => void;
 
-    // Filter State
-    activeCategory: string;
-    onSelectCategory: (category: string) => void;
-
     // Sort State
     sortBy: 'recent' | 'alphabetical' | 'destination';
     onSortChange: (sort: 'recent' | 'alphabetical' | 'destination') => void;
-
-    // Favorites
-    showFavoritesOnly: boolean;
-    onToggleFavorites: () => void;
 
     // Stats
     totalTrips: number;
@@ -27,15 +19,10 @@ interface GallerySidebarProps {
 export const GallerySidebar: React.FC<GallerySidebarProps> = ({
     isOpen,
     onClose,
-    activeCategory,
-    onSelectCategory,
     sortBy,
     onSortChange,
-    showFavoritesOnly,
-    onToggleFavorites,
     totalTrips
 }) => {
-    const categories = ['All', 'Luxury', 'Adventure', 'Family', 'Relax', 'Budget'];
     const navigate = useNavigate();
 
     return (
@@ -60,7 +47,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
             </div>
 
             {/* Stats Widget */}
-            <div className="p-4 m-4 bg-slate-50 dark:bg-surface-a10 rounded-xl border border-slate-100 dark:border-surface-a20 flex items-center justify-between">
+            <div className="p-4 m-4 bg-slate-50 dark:bg-surface-a10 rounded-xl border border-slate-100 dark:border-surface-a20 border-l-2 border-l-primary/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500">
                         <BarChart2 className="w-4 h-4" />
@@ -76,7 +63,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
             <div className="px-4 mt-2">
                 <button
                     onClick={() => navigate('/explore')}
-                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-500/20 transition-all hover:-translate-y-0.5"
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-primary to-purple-600 hover:from-primary hover:to-indigo-600 text-white rounded-xl font-bold shadow-md shadow-primary/20 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/30"
                 >
                     <Globe className="w-5 h-5" />
                     Explore Public Trips
@@ -101,10 +88,10 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                                 key={opt.id}
                                 onClick={() => onSortChange(opt.id as any)}
                                 className={cn(
-                                    "px-4 py-2 text-sm font-medium rounded-lg text-left transition-all",
+                                    "px-4 py-2 text-sm font-medium rounded-lg text-left transition-all border-l-2",
                                     sortBy === opt.id
-                                        ? "bg-purple-500/10 text-purple-600 dark:text-purple-500 border border-purple-500/20"
-                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-a10"
+                                        ? "bg-primary/8 text-primary dark:text-primary-a30 border-l-primary"
+                                        : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-surface-a10 border-l-transparent"
                                 )}
                             >
                                 {opt.label}
@@ -113,54 +100,6 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                     </div>
                 </div>
 
-                {/* Categories */}
-                <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                        <Filter className="w-3 h-3" /> Categories
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                        {categories.map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => onSelectCategory(cat)}
-                                className={cn(
-                                    "px-3 py-1.5 text-xs font-semibold rounded-full border transition-all",
-                                    activeCategory === cat
-                                        ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-transparent shadow-md"
-                                        : "bg-white dark:bg-surface-a0 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-surface-a20 hover:border-slate-300 dark:hover:border-surface-a30"
-                                )}
-                            >
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Favorites Toggle */}
-                <div className="pt-4 border-t border-slate-100 dark:border-surface-a10">
-                    <button
-                        onClick={onToggleFavorites}
-                        className={cn(
-                            "w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all group",
-                            showFavoritesOnly
-                                ? "bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-900/30"
-                                : "bg-white dark:bg-surface-a0 border-slate-200 dark:border-surface-a20 hover:border-red-200 dark:hover:border-red-900/30"
-                        )}
-                    >
-                        <span className={cn(
-                            "text-sm font-medium",
-                            showFavoritesOnly ? "text-red-600 dark:text-red-400" : "text-slate-600 dark:text-slate-400 group-hover:text-red-500"
-                        )}>
-                            Show Favorites Only
-                        </span>
-                        <Heart
-                            className={cn(
-                                "w-4 h-4 transition-colors",
-                                showFavoritesOnly ? "fill-red-500 text-red-500" : "text-slate-400 group-hover:text-red-500"
-                            )}
-                        />
-                    </button>
-                </div>
             </div>
 
             {/* Footer */}
