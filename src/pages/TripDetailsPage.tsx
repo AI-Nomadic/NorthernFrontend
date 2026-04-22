@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
     ChevronLeft, Star, MapPin, Clock, DollarSign, Calendar, Mountain, CheckCircle, Navigation, Map, Compass, Edit3, Copy 
 } from 'lucide-react';
 import { useAppSelector, useAppDispatch } from '../state';
 import { fetchPublicTrips, cloneTrip, resetForkStatus } from '../state/slices/publicTripsSlice';
+import { getTrip } from '../services/api';
+import { Trip } from '../types';
 import { cn } from '../utils';
 
 export const TripDetailsPage: React.FC = () => {
@@ -12,19 +14,44 @@ export const TripDetailsPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     
-    const { trips: publicTrips, loading, forkStatus, forkedTripId } = useAppSelector(state => state.publicTrips);
+    const { trips: publicTrips, loading: publicLoading, forkStatus, forkedTripId } = useAppSelector(state => state.publicTrips);
+    const dashboardTrip = useAppSelector(state => state.dashboard.itinerary);
     const { isAuthenticated, email: currentUserEmail } = useAppSelector(state => state.user);
-    const trip = publicTrips.find(t => t.id === tripId);
+    
+    const [fetchedTrip, setFetchedTrip] = useState<Trip | null>(null);
+    const [isFetching, setIsFetching] = useState(false);
+
+    let trip = publicTrips.find(t => t.id === tripId);
+    if (!trip && dashboardTrip?.id === tripId) {
+        trip = dashboardTrip;
+    }
+    if (!trip && fetchedTrip) {
+        trip = fetchedTrip;
+    }
 
     const isOwner = trip?.ownerEmail === currentUserEmail;
     const isCollaborator = trip?.collaborators?.some(c => c.email === currentUserEmail);
     const isContributor = isOwner || isCollaborator;
 
     useEffect(() => {
-        if (publicTrips.length === 0 && !loading) {
+        if (!trip && !isFetching && tripId) {
+            const fetchIt = async () => {
+                setIsFetching(true);
+                const fetched = await getTrip(tripId);
+                if (fetched) {
+                    setFetchedTrip(fetched);
+                }
+                setIsFetching(false);
+            };
+            fetchIt();
+        }
+    }, [trip, tripId, isFetching]);
+
+    useEffect(() => {
+        if (publicTrips.length === 0 && !publicLoading && !trip && !isFetching) {
             dispatch(fetchPublicTrips());
         }
-    }, [dispatch, publicTrips.length, loading]);
+    }, [dispatch, publicTrips.length, publicLoading, trip, isFetching]);
 
     useEffect(() => {
         if (forkStatus === 'success' && forkedTripId) {
@@ -45,7 +72,7 @@ export const TripDetailsPage: React.FC = () => {
         }
     };
 
-    if (loading || (!trip && publicTrips.length === 0)) {
+    if (publicLoading || isFetching || (!trip && publicTrips.length === 0 && isFetching)) {
         return (
             <div className="flex justify-center items-center h-screen bg-[#050505] text-white">
                 <div className="flex flex-col items-center gap-4 text-slate-400">

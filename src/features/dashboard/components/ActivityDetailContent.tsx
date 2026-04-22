@@ -54,7 +54,14 @@ export const ActivityDetailContent: React.FC<ActivityDetailContentProps> = ({ ac
         })
     };
 
-    const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activity.location)}`;
+    const searchQuery = activity.title && activity.location 
+        ? `${activity.title}, ${activity.location}`
+        : activity.location || activity.title || '';
+    
+    let mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`;
+    if (activity.placeId) {
+        mapLink += `&query_place_id=${activity.placeId}`;
+    }
 
     return (
         <div className="space-y-6">

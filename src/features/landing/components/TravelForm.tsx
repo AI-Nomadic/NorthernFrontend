@@ -317,6 +317,11 @@ const TravelForm: React.FC<TravelFormProps> = ({ onSubmit, isLoading }) => {
                 type="text"
                 placeholder="Where in Canada are we going?"
                 defaultValue={formData.destination}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                    }
+                }}
                 className="w-full px-6 py-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-slate-900 dark:text-white placeholder:text-slate-400 font-semibold italic md:text-lg outline-none"
             />
             <div className="absolute inset-0 rounded-2xl bg-primary/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" />

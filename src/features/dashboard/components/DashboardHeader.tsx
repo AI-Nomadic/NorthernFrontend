@@ -320,7 +320,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                         onClick={() => navigate(`/explore/trip/${tripId}`)}
                                         className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors"
                                     >
-                                        <Eye className="h-4 w-4" /> Preview Public Page
+                                        <Eye className="h-4 w-4" /> View Trip
                                     </button>
                                 )}
                                 {isOwner && (
