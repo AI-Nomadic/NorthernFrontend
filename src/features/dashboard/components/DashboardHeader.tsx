@@ -16,7 +16,8 @@ import {
     X,
     UserMinus,
     Edit2,
-    Check
+    Check,
+    Eye
 } from 'lucide-react';
 import { CollaboratorGroup } from './CollaboratorGroup';
 import { Collaborator } from '../../../types/trip';
@@ -37,6 +38,7 @@ interface DashboardHeaderProps {
     isPublished?: boolean;
     onRename?: (newTitle: string) => void;
     onTogglePublish?: () => void;
+    tripId?: string;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -52,7 +54,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     ownerEmail,
     isPublished,
     onRename,
-    onTogglePublish
+    onTogglePublish,
+    tripId
 }) => {
     const [isEditingTitle, setIsEditingTitle] = useState(false);
     const [editedTitle, setEditedTitle] = useState(destination);
@@ -312,6 +315,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                 <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors">
                                     <Mail className="h-4 w-4" /> Share via Email
                                 </button>
+                                {tripId && (
+                                    <button
+                                        onClick={() => navigate(`/explore/trip/${tripId}`)}
+                                        className="w-full text-left px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-2 transition-colors"
+                                    >
+                                        <Eye className="h-4 w-4" /> Preview Public Page
+                                    </button>
+                                )}
                                 {isOwner && (
                                     <>
                                         <div className="my-1 border-t border-gray-100/50 dark:border-surface-a10"></div>

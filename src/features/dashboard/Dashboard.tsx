@@ -182,6 +182,9 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
         console.log('🏁 Hydration Stream Complete');
         dispatch(setHydrating(false));
         eventSource.close();
+
+        // Immediately persist the fully-hydrated trip to the DB (first-ever POST)
+        dispatch(autosaveItinerary());
     });
 
     eventSource.onerror = (err) => {
@@ -373,6 +376,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
           {/* Top Bar - Refactored into DashboardHeader */}
           <DashboardHeader
             destination={tripState.destination}
+            tripId={itinerary.id}
             onDelete={() => setIsDeleteModalOpen(true)}
             sidebarOpen={sidebarOpen}
             onSidebarToggle={() => dispatch(setSidebarOpen(!sidebarOpen))}
@@ -584,18 +588,13 @@ const Dashboard: React.FC<DashboardProps> = ({ onReset }) => {
               <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-3">
                 Wait! You have unsaved changes
               </h3>
-              <p className="text-gray-500 dark:text-gray-400 mb-8 px-4 leading-relaxed">
-                Your edits were autosaved, but they haven't been <span className="text-indigo-600 dark:text-indigo-400 font-medium">Audited by AI</span> yet. Saving now will normalize your data and detect vibes.
-              </p>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 mt-4">
                 <button
                   onClick={handleSaveAndExit}
                   disabled={isSaving}
                   className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-2xl transition-all shadow-lg hover:shadow-indigo-200"
                 >
-                  {isSaving ? "Auditing IT..." : "Save & Finish (Audit)"}
+                  {isSaving ? "Saving..." : "Save Now"}
                 </button>
                 
                 <button

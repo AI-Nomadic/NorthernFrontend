@@ -71,7 +71,7 @@ export const TripTile: React.FC<TripTileProps> = ({
 
         <div className="mt-auto pt-4 border-t border-slate-100 dark:border-surface-a20 flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Starts from</span>
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Trip Total</span>
             <div className="flex items-center text-slate-900 dark:text-white">
                 <span className="text-xl font-black">{price}</span>
             </div>

@@ -64,6 +64,7 @@ export interface Trip {
     summaryStats: {
         totalActivities?: number;
         avgCostPerDay?: number;
+        totalCost?: number;
     };
 
     tags: string[];
@@ -140,6 +141,7 @@ export interface ItineraryResponse {
     summaryStats: {
         totalActivities: number;
         avgCostPerDay: number;
+        totalCost: number;
     };
     tags: string[];
     itinerary: DayPlan[];

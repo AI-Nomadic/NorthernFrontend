@@ -231,7 +231,7 @@ export const ExplorePage: React.FC = () => {
                                     image={trip.featuredImage || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=800'}
                                     location={trip.location ? `${trip.location.province || ''}${trip.location.region ? `, ${trip.location.region}` : ''}` : 'Unknown Location'}
                                     duration={`${trip.total_days || 0} Days`}
-                                    price={`${trip.currency || '$'} ${trip.summaryStats?.avgCostPerDay || 0}`}
+                                    price={`${trip.currency || '$'} ${(trip.summaryStats?.totalCost || 0).toLocaleString()}`}
                                     rating={4.8} // Placeholder
                                     reviews={124} // Placeholder
                                 />

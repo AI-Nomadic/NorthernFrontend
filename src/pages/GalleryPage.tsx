@@ -55,6 +55,38 @@ const GalleryPage: React.FC = () => {
         navigate('/dashboard');
     };
 
+    const getTripImage = (trip: any) => {
+        if (trip.featuredImage && trip.featuredImage.startsWith('http')) return trip.featuredImage;
+        if (trip.image_url && trip.image_url.startsWith('http')) return trip.image_url;
+
+        // Scan for an accommodation photo first (usually highest quality "resort" vibe)
+        for (const day of trip.itinerary || []) {
+            if (day.accommodation?.imageGallery?.length > 0) {
+                const img = day.accommodation.imageGallery.find((url: string) => url && url.startsWith('http'));
+                if (img) return img;
+            }
+        }
+
+        // Scan for any activity photo fallback (museums, parks)
+        for (const day of trip.itinerary || []) {
+            for (const act of day.activities || []) {
+                if (act.imageGallery?.length > 0) {
+                    const img = act.imageGallery.find((url: string) => url && url.startsWith('http'));
+                    if (img) return img;
+                }
+                // Ticketmaster explicit fallback
+                if (act.imageUrl && act.imageUrl.startsWith('http')) {
+                    return act.imageUrl;
+                }
+            }
+        }
+
+        // Ultimate fallback using the exact region name (Toronto, Banff, Elora)
+        const regionName = trip.location?.region || trip.location?.province || 'canada';
+        const keyword = encodeURIComponent(regionName.trim().toLowerCase());
+        return `https://source.unsplash.com/800x600/?${keyword},landscape,travel`;
+    };
+
     // -- Filtering & Sorting --
     const { personalTrips, collaborationTrips, publishedTrips } = useMemo(() => {
         let result = [...savedTrips];
@@ -206,9 +238,10 @@ const GalleryPage: React.FC = () => {
                                             {/* Image / Cover */}
                                             <div className="h-48 bg-purple-50 dark:bg-surface-a20 relative overflow-hidden">
                                                 <img
-                                                    src={invite.featuredImage || invite.image_url || "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9"}
+                                                    src={getTripImage(invite)}
                                                     alt={invite.trip_title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1517935706615-2717063c2225?q=80&w=800&auto=format&fit=crop"; }}
                                                 />
                                             </div>
 
@@ -280,12 +313,10 @@ const GalleryPage: React.FC = () => {
                                     {/* Image / Cover */}
                                     <div className="h-48 bg-slate-200 dark:bg-surface-a20 relative overflow-hidden">
                                         <img
-                                            src={trip.featuredImage || trip.image_url || (trip.id.includes('montreal')
-                                                ? "https://images.unsplash.com/photo-1519178555425-500d4861cd75?q=80&w=800&auto=format&fit=crop"
-                                                : "https://images.unsplash.com/photo-1517935706615-2717063c2225?q=80&w=800&auto=format&fit=crop"
-                                            )}
+                                            src={getTripImage(trip)}
                                             alt={trip.trip_title}
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1517935706615-2717063c2225?q=80&w=800&auto=format&fit=crop"; }}
                                         />
                                     </div>
 
@@ -308,7 +339,7 @@ const GalleryPage: React.FC = () => {
                                             </div>
                                             <div className="flex items-center gap-1 bg-slate-100 dark:bg-surface-a10 px-2 py-1 rounded-md">
                                                 <DollarSign className="w-3 h-3" />
-                                                {trip.metrics?.targetBudget ? `$${trip.metrics.targetBudget.toLocaleString()} ` : ''}{trip.currency || 'CAD'}
+                                                {trip.currency || 'CAD'} {(trip.summaryStats?.totalCost || 0).toLocaleString()}
                                             </div>
                                         </div>
 
@@ -342,9 +373,10 @@ const GalleryPage: React.FC = () => {
                                             {/* Image / Cover */}
                                             <div className="h-48 bg-emerald-50 dark:bg-surface-a20 relative overflow-hidden">
                                                 <img
-                                                    src={trip.featuredImage || trip.image_url || "https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=800&auto=format&fit=crop"}
+                                                    src={getTripImage(trip)}
                                                     alt={trip.trip_title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=800&auto=format&fit=crop"; }}
                                                 />
                                                 <div className="absolute top-3 right-3">
                                                     <div className="px-2 py-1 rounded-md bg-emerald-600/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
@@ -372,7 +404,7 @@ const GalleryPage: React.FC = () => {
                                                     </div>
                                                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-surface-a10 px-2 py-1 rounded-md">
                                                         <DollarSign className="w-3 h-3" />
-                                                        {trip.metrics?.targetBudget ? `$${trip.metrics.targetBudget.toLocaleString()} ` : ''}{trip.currency || 'CAD'}
+                                                        {trip.currency || 'CAD'} {(trip.summaryStats?.totalCost || 0).toLocaleString()}
                                                     </div>
                                                 </div>
 
@@ -409,9 +441,10 @@ const GalleryPage: React.FC = () => {
                                             {/* Image / Cover */}
                                             <div className="h-48 bg-purple-50 dark:bg-surface-a20 relative overflow-hidden">
                                                 <img
-                                                    src={trip.featuredImage || trip.image_url || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=800&auto=format&fit=crop"}
+                                                    src={getTripImage(trip)}
                                                     alt={trip.trip_title}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    onError={(e) => { e.currentTarget.src = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=800&auto=format&fit=crop"; }}
                                                 />
                                                 <div className="absolute top-3 right-3">
                                                     <div className="px-2 py-1 rounded-md bg-purple-600/80 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider">
@@ -439,7 +472,7 @@ const GalleryPage: React.FC = () => {
                                                     </div>
                                                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-surface-a10 px-2 py-1 rounded-md">
                                                         <DollarSign className="w-3 h-3" />
-                                                        {trip.metrics?.targetBudget ? `$${trip.metrics.targetBudget.toLocaleString()} ` : ''}{trip.currency || 'CAD'}
+                                                        {trip.currency || 'CAD'} {(trip.summaryStats?.totalCost || 0).toLocaleString()}
                                                     </div>
                                                 </div>
 

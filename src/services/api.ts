@@ -71,16 +71,113 @@ export const getAllTrips = async (): Promise<Trip[]> => {
 };
 
 /**
+ * Sanitize trip payload before sending to the backend.
+ * Strips frontend-only fields and fixes type mismatches.
+ */
+const sanitizeTripPayload = (trip: Trip): any => {
+    const sanitized = {
+        id: trip.id,
+        trip_title: trip.trip_title,
+        featuredImage: trip.featuredImage || null,
+        total_days: trip.total_days,
+        currency: trip.currency,
+        visibility: trip.visibility || 'PRIVATE',
+        sourceId: trip.sourceId || null,
+        location: trip.location || {},
+        taxonomy: trip.taxonomy || {},
+        metrics: {
+            ...(trip.metrics || {}),
+            targetBudget: typeof trip.metrics?.targetBudget === 'number' ? trip.metrics.targetBudget : 
+                         (typeof trip.metrics?.targetBudget === 'string' && !isNaN(Number(trip.metrics.targetBudget)) ? Number(trip.metrics.targetBudget) : null),
+        },
+        summaryStats: {
+            ...(trip.summaryStats || {}),
+            totalCost: (trip.itinerary || []).reduce((sum, day) => {
+                const activitiesTotal = (day.activities || []).reduce((daySum, act) => daySum + (Number(act.cost_estimate) || 0), 0);
+                const accommodationTotal = day.accommodation?.pricePerNight ? Number(day.accommodation.pricePerNight) : 0;
+                return sum + activitiesTotal + accommodationTotal;
+            }, 0)
+        },
+        tags: trip.tags || [],
+        itinerary: (trip.itinerary || []).map((day: any) => ({
+            id: day.id,
+            dayNumber: day.dayNumber,
+            date: day.date || null,
+            theme: day.theme || null,
+            stats: day.stats || null,
+            accommodation: day.accommodation ? {
+                id: day.accommodation.id,
+                type: day.accommodation.type || null,
+                hotelName: day.accommodation.hotelName || null,
+                address: day.accommodation.address || null,
+                pricePerNight: day.accommodation.pricePerNight != null ? Number(day.accommodation.pricePerNight) : null,
+                rating: day.accommodation.rating != null ? Number(day.accommodation.rating) : null,
+                checkInTime: day.accommodation.checkInTime || null,
+                checkOutTime: day.accommodation.checkOutTime || null,
+                bookingStatus: day.accommodation.bookingStatus || null,
+                contactNumber: day.accommodation.contactNumber || null,
+                bookingUrl: day.accommodation.bookingUrl || null,
+                mapLink: day.accommodation.mapLink || null,
+                coordinates: day.accommodation.coordinates || null,
+                placeId: day.accommodation.placeId || null,
+                user_ratings_total: day.accommodation.user_ratings_total || null,
+                website: day.accommodation.website || null,
+                openingHours: day.accommodation.openingHours || [],
+                description: day.accommodation.description || null,
+                imageGallery: day.accommodation.imageGallery || [],
+                amenities: day.accommodation.amenities || [],
+            } : null,
+            activities: (day.activities || []).map((act: any) => ({
+                id: act.id,
+                type: act.type || null,
+                title: act.title,
+                location: act.location || null,
+                description: act.description || null,
+                cost_estimate: act.cost_estimate != null ? Number(act.cost_estimate) : null,
+                category: act.category || null,
+                durationMinutes: act.durationMinutes || null,
+                time: act.time || null,
+                timeSlot: act.timeSlot || null,
+                coordinates: act.coordinates || null,
+                travelDistance: act.travelDistance || null,
+                travelTimeFromPrev: act.travelTimeFromPrev || null,
+                status: act.status || 'planned',
+                imageGallery: act.imageGallery || [],
+                rating: act.rating != null ? Number(act.rating) || null : null,
+                user_ratings_total: act.user_ratings_total || null,
+                contactNumber: act.contactNumber || null,
+                website: act.website || null,
+                openingHours: act.openingHours || [],
+                placeId: act.placeId || null,
+                metadata: act.metadata || { isLocked: false, source: 'ai_generated' },
+                imageUrl: act.imageUrl || null,
+                isEvent: act.isEvent || null,
+                bookingUrl: act.bookingUrl || null,
+                price_note: act.price_note || null,
+                eventDate: act.eventDate || null,
+            })),
+        })),
+    };
+    return sanitized;
+};
+
+/**
  * Create a new trip on the backend.
  */
 export const createTrip = async (trip: Trip): Promise<Trip | null> => {
     try {
+        const payload = sanitizeTripPayload(trip);
+        console.log('📤 POST /trips FULL payload:', JSON.parse(JSON.stringify(payload)));
         const response = await fetch(`${REAL_API_BASE}/trips`, {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify(trip),
+            body: JSON.stringify(payload),
         });
-        if (!response.ok) throw new Error(`Failed to create trip: ${response.statusText}`);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`❌ POST /trips failed [${response.status}]:`, errorBody);
+            throw new Error(`Failed to create trip: ${response.statusText}`);
+        }
         const created = await response.json();
         if (created && created.id) {
             knownSavedTrips.add(created.id);
@@ -92,21 +189,49 @@ export const createTrip = async (trip: Trip): Promise<Trip | null> => {
     }
 };
 
-export const persistTrip = async (trip: Trip): Promise<Trip | null> => {
-    // If we confidently know the trip exists, perform a PUT immediately.
+/**
+ * Initial save — always POST, called once right after hydration completes.
+ * This guarantees the trip exists in the DB before any PUT updates.
+ */
+export const initialSaveTrip = async (trip: Trip): Promise<Trip | null> => {
+    // If we've already saved this trip in this session, skip the POST and do a PUT if needed.
     if (knownSavedTrips.has(trip.id)) {
+        console.log(`ℹ️ Trip ${trip.id} already exists in local cache. Using persistTrip (PUT) instead.`);
+        return persistTrip(trip);
+    }
+    
+    console.log(`🚀 Attempting initial POST for new trip: ${trip.id}`);
+    const result = await createTrip(trip);
+    
+    if (result) {
+        console.log('✨ Initial POST successful!');
+        knownSavedTrips.add(trip.id);
+        return result;
+    } 
+    
+    // Fallback: If POST failed, it might be a collision or desync. Try PUT.
+    console.warn(`⚠️ Initial POST failed for ${trip.id}. Falling back to PUT...`);
+    return updateTrip(trip);
+};
+
+export const persistTrip = async (trip: Trip): Promise<Trip | null> => {
+    const payload = sanitizeTripPayload(trip);
+    
+    // Decide whether to POST or PUT
+    if (knownSavedTrips.has(trip.id)) {
+        console.log(`🔄 Persisting changes via PUT for trip: ${trip.id}`);
         return updateTrip(trip);
     }
 
-    // Otherwise, the Trip is brand new (fresh from AI-Planner). Perform a POST.
+    console.log(`🆕 Persisting brand new trip via POST: ${trip.id}`);
     const created = await createTrip(trip);
+    
     if (created) {
-        console.log('✨ Brand new trip saved successfully!');
         return created;
     }
 
-    // In the extremely rare case of a desync where POST fails because it exists, fallback to PUT
-    console.warn(`⚠️ Create failed for trip ${trip.id}. Attempting to update (PUT) as fallback...`);
+    // Safety fallback
+    console.warn(`⚠️ POST failed for ${trip.id}. Attempting final fallback via PUT...`);
     return updateTrip(trip);
 };
 
@@ -124,12 +249,17 @@ export const getSuggestions = async (context: any): Promise<Suggestion[]> => {
  */
 export const updateTrip = async (trip: Trip): Promise<Trip | null> => {
     try {
+        const payload = sanitizeTripPayload(trip);
         const response = await fetch(`${REAL_API_BASE}/trips/${trip.id}`, {
             method: 'PUT',
             headers: getAuthHeaders(),
-            body: JSON.stringify(trip),
+            body: JSON.stringify(payload),
         });
-        if (!response.ok) throw new Error(`Failed to update trip: ${response.statusText}`);
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`❌ PUT /trips/${trip.id} failed [${response.status}]:`, errorBody);
+            throw new Error(`Failed to update trip: ${response.statusText}`);
+        }
         const updated = await response.json();
         if (updated && updated.id) {
             knownSavedTrips.add(updated.id);
@@ -308,8 +438,9 @@ export const generateItinerary = async (data: TravelFormData): Promise<Itinerary
     });
 
     if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate skeleton itinerary');
+        const errorText = await response.text();
+        console.error(`❌ AI-Planner /generate failed [${response.status}]:`, errorText);
+        throw new Error(errorText || 'Failed to generate');
     }
 
     return await response.json() as ItineraryResponse;

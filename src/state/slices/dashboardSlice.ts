@@ -42,7 +42,7 @@ export const autosaveItinerary = createAsyncThunk(
     async (_, { getState }) => {
         const state = getState() as RootState;
         const currentItinerary = state.dashboard.itinerary;
-        const { persistTrip } = await import('@services/api');
+        const { persistTrip, initialSaveTrip } = await import('@services/api');
 
         if (!currentItinerary) return null;
 
@@ -56,7 +56,8 @@ export const autosaveItinerary = createAsyncThunk(
             total_days: currentItinerary.itinerary.length
         };
 
-        return await persistTrip(cleanedItinerary);
+        // initialSaveTrip handles POST vs PUT routing and fallbacks internally.
+        return await initialSaveTrip(cleanedItinerary);
     }
 );
 
@@ -77,7 +78,7 @@ export const architectAuditAndSave = createAsyncThunk(
 
         // --- STEP 1: TRAVEL DATA ARCHITECT AUDIT ---
         console.log("--- [DEBUG] STARTING AI ARCHITECT AUDIT ---");
-        console.log("ITINERARY BEFORE AUDIT:", JSON.parse(JSON.stringify(currentItinerary))); 
+        console.log("ITINERARY BEFORE AUDIT:", JSON.parse(JSON.stringify(currentItinerary)));
 
         // Post-Review logic for location normalization and vibe detection
         const auditedTrip = await auditTrip(currentItinerary);
@@ -115,7 +116,7 @@ export const performHydration = createAsyncThunk(
     'dashboard/hydrateActivity',
     async ({ dayId, activity, destination, prevCoords, startTime }: { dayId: string; activity: any; destination: string; prevCoords?: { lat: number; lng: number }; startTime?: string }, { dispatch }) => {
         const hydrated = await hydrateActivityAPI(activity, destination, prevCoords, startTime);
-        
+
         // Wait a tick for the fulfilled extraReducer to update the Redux state with hydrated data
         setTimeout(() => {
             dispatch(autosaveItinerary());
@@ -129,7 +130,7 @@ export const performAccommodationHydration = createAsyncThunk(
     'dashboard/hydrateAccommodation',
     async ({ dayId, accommodation, destination }: { dayId: string; accommodation: any; destination: string }, { dispatch }) => {
         const hydrated = await hydrateAccommodationAPI(accommodation, destination);
-        
+
         setTimeout(() => {
             dispatch(autosaveItinerary());
         }, 100);
@@ -175,7 +176,7 @@ interface DashboardState {
     selectedDayId: string | null;
     selectedActivity: Activity | null;
     selectedAccommodation: Accommodation | null;
-    isDirty: boolean; 
+    isDirty: boolean;
 }
 
 const initialState: DashboardState = {
@@ -676,14 +677,16 @@ const dashboardSlice = createSlice({
             .addCase(generateAITrip.fulfilled, (state, action) => {
                 state.loading = false;
                 state.itinerary = action.payload as Trip;
-                
+
                 // Persist last-opened trip ID
                 localStorage.setItem('northern_last_trip_id', action.payload.id || '');
 
                 // Derive TripState
                 const firstDay = action.payload.itinerary[0];
                 const lastDay = action.payload.itinerary[action.payload.itinerary.length - 1];
-                const targetGeneratedBudget = action.meta.arg.budget || 1000;
+                const budgetLabel = action.meta.arg.budget; // 'Budget' | 'Standard' | 'Luxury'
+                const budgetMap: Record<string, number> = { Budget: 1000, Standard: 2500, Luxury: 5000 };
+                const targetGeneratedBudget = budgetMap[budgetLabel] || 2500;
 
                 state.tripState = {
                     destination: action.payload.location?.region || action.payload.location?.province || action.payload.trip_title,
@@ -757,7 +760,7 @@ const dashboardSlice = createSlice({
                     isHydrating: false,
                     isDraft: false
                 };
-                
+
                 // Recalculate timeline
                 state.itinerary.itinerary[dayIndex].activities = recalculateDayTimeline(state.itinerary.itinerary[dayIndex].activities);
                 state.isDirty = true;
@@ -797,7 +800,7 @@ const dashboardSlice = createSlice({
                     id: accommodationId, // Keep the original ID so UI doesn't break
                     bookingStatus: 'draft'
                 };
-                
+
                 state.isDirty = true;
             });
     }

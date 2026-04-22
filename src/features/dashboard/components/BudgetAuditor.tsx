@@ -101,52 +101,49 @@ export const BudgetAuditor: React.FC<BudgetAuditorProps> = ({ totalCost, budget 
                         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
                             Adjust Goal
                         </p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
                             {/* Decrease */}
                             <button
                                 onClick={handleDecrease}
                                 disabled={budget <= 100}
-                                className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/8 hover:bg-red-50 dark:hover:bg-red-500/15 hover:text-red-500 text-slate-500 dark:text-slate-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
+                                className="flex items-center justify-center w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/10 text-red-500 border border-red-100 dark:border-red-500/20 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 shadow-sm"
                                 title="-$100"
                             >
-                                <Minus className="w-3.5 h-3.5" />
+                                <Minus className="w-4 h-4" />
                             </button>
 
                             {/* Budget display */}
-                            <div className="flex-1 text-center bg-slate-50 dark:bg-white/5 rounded-lg py-1.5 px-2 border border-slate-200/60 dark:border-white/8">
-                                <span className="text-sm font-black text-slate-700 dark:text-white tabular-nums">
+                            <div className="flex-1 text-center bg-slate-50 dark:bg-white/5 rounded-xl py-2 px-3 border border-slate-200 dark:border-white/10 shadow-inner">
+                                <span className="text-base font-black text-slate-800 dark:text-white tabular-nums tracking-tight">
                                     ${budget.toLocaleString()}
                                 </span>
-                                <span className="text-[9px] font-bold text-slate-400 ml-1 uppercase tracking-wide">CAD</span>
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 ml-1.5 uppercase tracking-widest">CAD</span>
                             </div>
 
                             {/* Increase */}
                             <button
                                 onClick={handleIncrease}
-                                className="flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/8 hover:bg-emerald-50 dark:hover:bg-emerald-500/15 hover:text-emerald-500 text-slate-500 dark:text-slate-400 transition-all shrink-0"
+                                className="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-all shrink-0 shadow-sm"
                                 title="+$100"
                             >
-                                <Plus className="w-3.5 h-3.5" />
+                                <Plus className="w-4 h-4" />
                             </button>
                         </div>
 
                         {/* Quick presets */}
-                        <div className="flex gap-1 mt-2">
+                        <div className="flex gap-2 mt-4">
                             {[500, 1000, 2000, 5000].map(preset => (
                                 <button
                                     key={preset}
                                     onClick={(e) => { e.stopPropagation(); dispatch(setBudget(preset)); }}
                                     className={cn(
-                                        "flex-1 text-[9px] font-bold py-1 rounded-md transition-all uppercase tracking-wide",
+                                        "flex-1 text-[10px] font-bold py-1.5 rounded-full transition-all uppercase tracking-wide border",
                                         budget === preset
-                                            ? "text-white"
-                                            : "bg-slate-100 dark:bg-white/6 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/12"
+                                            ? "bg-emerald-500 text-white border-emerald-500 shadow-md scale-105"
+                                            : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-white/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-500/5"
                                     )}
-                                    style={budget === preset ? {
-                                        background: 'linear-gradient(135deg, #da09de, #8b5cf6)'
-                                    } : {}}
                                 >
-                                    ${preset >= 1000 ? `${preset / 1000}k` : preset}
+                                    ${preset >= 1000 ? `${preset / 1000}K` : preset}
                                 </button>
                             ))}
                         </div>
